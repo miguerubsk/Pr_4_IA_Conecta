@@ -42,9 +42,9 @@ public class Conecta extends JFrame implements ActionListener {
 
     // Parámetros
     // Número de filas
-    private static final int filas = 6;
+    private static final int filas = 4;
     // Número de columnas
-    private static final int columnas = 7;
+    private static final int columnas = 4;
     // Número de fichas que han de alinearse para ganar
     private static final int conecta = 4;
 
@@ -195,11 +195,6 @@ public class Conecta extends JFrame implements ActionListener {
 
     public void finJuego(int ganador) {
         // Comprobamos si llegamos al final del juego
-        // Empate!!!
-        if (movimiento >= filas * columnas) {
-            JOptionPane.showMessageDialog(this, "¡Empate!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
-            reset();
-        }
         switch (ganador) {
             case JUGADOR1:
                 JOptionPane.showMessageDialog(this, "¡Ganador, Jugador 1\nen " + movimiento + " movimientos!", "Conecta4", JOptionPane.INFORMATION_MESSAGE, juego.getFicha1());
@@ -211,6 +206,11 @@ public class Conecta extends JFrame implements ActionListener {
                 System.out.println("Ganador: Jugador 2, en " + movimiento + " movimientos.");
                 reset();
                 break;
+        }
+        // Empate!!!
+        if (movimiento >= filas * columnas) {
+            JOptionPane.showMessageDialog(this, "¡Empate!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
+            reset();
         }
 
     } // finJuego
