@@ -17,6 +17,7 @@
 package conecta;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -37,7 +38,7 @@ public class IAPlayer extends Player {
     private static final int COLUMNAS = 7;
     private static final int FILAS = 6;
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD = 7;
+    private static final int PROFUNDIDAD_MAX = 7;
 
     private int alpha;
     private int beta;
@@ -60,61 +61,175 @@ public class IAPlayer extends Player {
         //Pintar Ficha (sustituir 'columna' por el valor adecuado)
         //Pintar Ficha
         int columna = getRandomColumn(tablero);
-        
-        Estado estadoActual = new Estado(tablero.toArray(), false, Conecta.JUGADOR1);
-        
-        construirArbolMiniMax(estadoActual, estadoActual.alternarJugador(), 0);
+
+        Estado estadoActual = new Estado(tablero.toArray(), false, Conecta.JUGADOR2);
+
+        construirArbolMiniMax(estadoActual, 0);
+
+        print(estadoActual);
 
         return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
 
     }
 
-    private void construirArbolMiniMax(Estado estadoActual, int jugador, int profundidadActual) {
-        if (!estadoActual.estadoFinal) {
+    private void construirArbolMiniMax(Estado estadoActual, int profundidadActual) {
+        if (!estadoActual.estadoFinal && profundidadActual <= PROFUNDIDAD_MAX) {
             for (int i = 0; i < COLUMNAS; i++) {
                 if (!estadoActual.tablero.fullColumn(i)) {
-                    Tablero tableroAux = estadoActual.tablero.clone();
-                    Estado estadoAux;
-                    switch(tableroAux.checkWin(tableroAux.setButton(i, jugador), i, jugador)){
-                        case 1:
-                            estadoAux = new Estado(tableroAux, true, estadoActual.alternarJugador());
+                    Estado estadoAux = new Estado(estadoActual.tablero, false, estadoActual.alternarJugador());
+                    switch (estadoAux.tablero.checkWin(estadoAux.tablero.setButton(i, estadoActual.jugador), i, estadoActual.jugador)) {
+                        case Conecta.JUGADOR1:
+                            estadoAux.alternarEstado();
                             estadoAux.valor = -1;
                             estadoActual.hijos.add(estadoAux);
                             break;
-                        case -1:
-                            estadoAux = new Estado(tableroAux, true, estadoActual.alternarJugador());
+                        case Conecta.JUGADOR2:
+                            estadoAux.alternarEstado();
                             estadoAux.valor = 1;
                             estadoActual.hijos.add(estadoAux);
                             break;
-                        default: 
-                            estadoAux = new Estado(tableroAux, false, estadoActual.alternarJugador());
+                        default:
                             estadoActual.hijos.add(estadoAux);
-                            construirArbolMiniMax(estadoAux, jugador, profundidadActual+1);
+                            construirArbolMiniMax(estadoAux, profundidadActual + 1);
                             break;
                     }
-//                    System.err.println("Capa " + profundidadActual + " Nodo " + i + estadoActual.tablero.toString());
                 }
             }
-            if(estadoActual.hijos.isEmpty()){
+            if (estadoActual.hijos.isEmpty()) {
                 estadoActual.valor = 0;
-                estadoActual.estadoFinal = true;
-            }else{
-                switch(estadoActual.jugador){
-                    case -1:
-                        for(Estado hijo : estadoActual.hijos){
-                            if(hijo.valor > estadoActual.valor)
-                                estadoActual.valor = hijo.valor;
-                        }
-                        break;
-                    case 1:
-                        for(Estado hijo : estadoActual.hijos){
-                            if(hijo.valor < estadoActual.valor)
-                                estadoActual.valor = hijo.valor;
-                        }
-                        break;
-                }
+                estadoActual.alternarEstado();
             }
         }
+        switch (estadoActual.jugador) {
+            case Conecta.JUGADOR2:
+                for (Estado hijo : estadoActual.hijos) {
+                    if (hijo.valor > estadoActual.valor) {
+                        estadoActual.valor = hijo.valor;
+                    }
+                }
+                break;
+            case Conecta.JUGADOR1:
+                for (Estado hijo : estadoActual.hijos) {
+                    if (hijo.valor < estadoActual.valor) {
+                        estadoActual.valor = hijo.valor;
+                    }
+                }
+                break;
+        }
+    }
+
+    public static void print(Estado root) {
+        List<List<String>> lines = new ArrayList<List<String>>();
+
+        List<Estado> level = new ArrayList<Estado>();
+        List<Estado> next = new ArrayList<Estado>();
+
+        level.add(root);
+        int nn = 1;
+
+        int widest = 0;
+
+        while (nn != 0) {
+            List<String> line = new ArrayList<String>();
+
+            nn = 0;
+
+            for (Estado n : level) {
+                if (n == null) {
+                    line.add(null);
+
+                    next.add(null);
+                    next.add(null);
+                } else {
+                    String aa = n.toString();
+                    line.add(aa);
+                    if (aa.length() > widest) {
+                        widest = aa.length();
+                    }
+
+                    for (Estado aux : n.hijos) {
+                        next.add(aux);
+                        nn++;
+                    }
+                }
+            }
+
+            if (widest % 2 == 1) {
+                widest++;
+            }
+
+            lines.add(line);
+
+            List<Estado> tmp = level;
+            level = next;
+            next = tmp;
+            next.clear();
+        }
+
+        int perpiece = lines.get(lines.size() - 1).size() * (widest + 4);
+        for (int i = 0; i < lines.size(); i++) {
+            List<String> line = lines.get(i);
+            int hpw = (int) Math.floor(perpiece / 2f) - 1;
+
+            if (i > 0) {
+                for (int j = 0; j < line.size(); j++) {
+
+                    // split node
+                    char c = ' ';
+                    if (j % 2 == 1) {
+                        if (line.get(j - 1) != null) {
+                            c = (line.get(j) != null) ? '┴' : '┘';
+                        } else {
+                            if (j < line.size() && line.get(j) != null) {
+                                c = '└';
+                            }
+                        }
+                    }
+                    System.out.print(c);
+
+                    // lines and spaces
+                    if (line.get(j) == null) {
+                        for (int k = 0; k < perpiece - 1; k++) {
+                            System.out.print(" ");
+                        }
+                    } else {
+
+                        for (int k = 0; k < hpw; k++) {
+                            System.out.print(j % 2 == 0 ? " " : "─");
+                        }
+                        System.out.print(j % 2 == 0 ? "┌" : "┐");
+                        for (int k = 0; k < hpw; k++) {
+                            System.out.print(j % 2 == 0 ? "─" : " ");
+                        }
+                    }
+                }
+                System.out.println();
+            }
+
+            // print line of numbers
+            for (int j = 0; j < line.size(); j++) {
+
+                String f = line.get(j);
+                if (f == null) {
+                    f = "";
+                }
+                int gap1 = (int) Math.ceil(perpiece / 2f - f.length() / 2f);
+                int gap2 = (int) Math.floor(perpiece / 2f - f.length() / 2f);
+
+                // a number
+                for (int k = 0; k < gap1; k++) {
+                    System.out.print(" ");
+                }
+                System.out.print(f);
+                for (int k = 0; k < gap2; k++) {
+                    System.out.print(" ");
+                }
+            }
+            System.out.println();
+
+            perpiece /= 2;
+        }
+
     }
 
     public class Estado {
@@ -155,7 +270,11 @@ public class IAPlayer extends Player {
             this.tablero = new Tablero(tablero);
             this.estadoFinal = estadoFinal;
             this.jugador = jugador;
-            this.valor = 0;
+            if(jugador == Conecta.JUGADOR1){
+                this.valor = Integer.MAX_VALUE;
+            }else{
+                this.valor = Integer.MIN_VALUE;
+            }
         }
 
         public Estado(Tablero tablero, boolean estadoFinal, int jugador) {
@@ -163,15 +282,28 @@ public class IAPlayer extends Player {
             this.tablero = tablero.clone();
             this.estadoFinal = estadoFinal;
             this.jugador = jugador;
-            this.valor = 0;
+            if(jugador == Conecta.JUGADOR1){
+                this.valor = Integer.MAX_VALUE;
+            }else{
+                this.valor = Integer.MIN_VALUE;
+            }
+        }
+        
+        private void alternarEstado(){
+            this.estadoFinal = !estadoFinal;
         }
 
         private int alternarJugador() {
-            if (this.jugador == 1) {
-                return -1;
+            if (this.jugador == Conecta.JUGADOR1) {
+                return Conecta.JUGADOR2;
             } else {
-                return 1;
+                return Conecta.JUGADOR1;
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Estado{" + "estadoFinal= " + estadoFinal + ", valor= " + valor + ", jugador= " + jugador + ", tablero=" + tablero.toString() + '}';
         }
 
     }
@@ -200,6 +332,7 @@ public class IAPlayer extends Player {
 
         /**
          * Compruba si la columna que se le pasa como parámetro está llena
+         *
          * @param col columna que se quiere comprobar
          * @return true si está llena
          * @return false si queda algún hueco
@@ -214,25 +347,6 @@ public class IAPlayer extends Player {
             // Si y < 0, columna completa
             return (y < 0);
 
-        }
-
-        /**
-         * // Devuelve la posición del primer hueco libre de la columna
-         * @param col columna que se quiere comprobar
-         * @return la posición del hueco
-         * @return -2 si la columna está llena
-         */
-        private int topColumn(int col) {
-            int y = FILAS - 1;
-            //Ir a la última posición de la columna	
-            while ((y >= 0) && (tablero[y][col] != 0)) {
-                y--;
-            }
-            if (y < 0) {
-                return -2; // Error: La columna está completa
-            } else {
-                return (y + 1);
-            }
         }
 
         @Override
@@ -267,13 +381,16 @@ public class IAPlayer extends Player {
         }
 
         /**
-         * Comprueba si el tablero se halla en un estado de fin de partida, a partir de la última jugada realizada
-         * @param x fila de la última ficha
-         * @param y columna de la última ficha
+         * Comprueba si el tablero se halla en un estado de fin de partida, a
+         * partir de la última jugada realizada
+         *
+         * @param fila fila de la última ficha
+         * @param columna columna de la última ficha
          * @param conecta número de fichas consecutivas necesarias para ganar
-         * @return 1 si gana el jugador 1. -1 si gana el jugador 2. 0 si aún no ha ganado nadie
+         * @return 1 si gana el jugador 1. -1 si gana el jugador 2. 0 si aún no
+         * ha ganado nadie
          */
-        public int checkWin(int x, int y, int conecta) {
+        public int checkWin(int fila, int columna, int conecta) {
             /*
 		 *	x fila
 		 *	y columna
@@ -285,8 +402,8 @@ public class IAPlayer extends Player {
             int ganador = 0;
             boolean salir = false;
             for (int i = 0; (i < FILAS) && !salir; i++) {
-                if (tablero[i][y] != Conecta.VACIO) {
-                    if (tablero[i][y] == Conecta.JUGADOR1) {
+                if (tablero[i][columna] != Conecta.VACIO) {
+                    if (tablero[i][columna] == Conecta.JUGADOR1) {
                         ganar1++;
                     } else {
                         ganar1 = 0;
@@ -297,7 +414,7 @@ public class IAPlayer extends Player {
                         salir = true;
                     }
                     if (!salir) {
-                        if (tablero[i][y] == Conecta.JUGADOR2) {
+                        if (tablero[i][columna] == Conecta.JUGADOR2) {
                             ganar2++;
                         } else {
                             ganar2 = 0;
@@ -317,8 +434,8 @@ public class IAPlayer extends Player {
             ganar1 = 0;
             ganar2 = 0;
             for (int j = 0; (j < COLUMNAS) && !salir; j++) {
-                if (tablero[x][j] != Conecta.VACIO) {
-                    if (tablero[x][j] == Conecta.JUGADOR1) {
+                if (tablero[fila][j] != Conecta.VACIO) {
+                    if (tablero[fila][j] == Conecta.JUGADOR1) {
                         ganar1++;
                     } else {
                         ganar1 = 0;
@@ -329,7 +446,7 @@ public class IAPlayer extends Player {
                         salir = true;
                     }
                     if (ganador != Conecta.JUGADOR1) {
-                        if (tablero[x][j] == Conecta.JUGADOR2) {
+                        if (tablero[fila][j] == Conecta.JUGADOR2) {
                             ganar2++;
                         } else {
                             ganar2 = 0;
@@ -348,8 +465,8 @@ public class IAPlayer extends Player {
             // Comprobar oblicuo. De izquierda a derecha
             ganar1 = 0;
             ganar2 = 0;
-            int a = x;
-            int b = y;
+            int a = fila;
+            int b = columna;
             while (b > 0 && a > 0) {
                 a--;
                 b--;
@@ -388,8 +505,8 @@ public class IAPlayer extends Player {
             // Comprobar oblicuo de derecha a izquierda 
             ganar1 = 0;
             ganar2 = 0;
-            a = x;
-            b = y;
+            a = fila;
+            b = columna;
             //buscar posición de la esquina
             while (b < COLUMNAS - 1 && a > 0) {
                 a--;
@@ -430,7 +547,14 @@ public class IAPlayer extends Player {
             return ganador;
         }
 
-        // Coloca una ficha en la columna col
+        /**
+         * Coloca una ficha en la columna col para el jugador
+         *
+         * @param col columna en la que se coloca la ficha
+         * @param jugador jugador al que pertenece la ficha
+         * @return fila en la que se coloca la ficha o -1 si no se ha podido
+         * colocar
+         */
         public int setButton(int col, int jugador) {
 
             int y = FILAS - 1;
