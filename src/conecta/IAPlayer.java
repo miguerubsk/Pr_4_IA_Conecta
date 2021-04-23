@@ -17,7 +17,9 @@
 package conecta;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  *
@@ -62,9 +64,9 @@ public class IAPlayer extends Player {
         //Pintar Ficha
         int columna = getRandomColumn(tablero);
 
-        Estado estadoActual = new Estado(tablero.toArray(), Conecta.JUGADOR2);
+        Estado estadoActual = new Estado(tablero.toArray(), Conecta.JUGADOR1, 1);
 
-        construirArbolMiniMax(estadoActual, 0);
+        construirArbolMiniMax(estadoActual, 1);
 
         print(estadoActual);
 
@@ -76,7 +78,7 @@ public class IAPlayer extends Player {
         if (!estadoActual.estadoFinal && profundidadActual <= PROFUNDIDAD_MAX) {
             for (int i = 0; i < COLUMNAS; i++) {
                 if (!estadoActual.tablero.fullColumn(i)) {
-                    Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador());
+                    Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador(), profundidadActual + 1);
                     int ganador = estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA);
                     switch (ganador) {
                         case Conecta.JUGADOR1:
@@ -120,117 +122,18 @@ public class IAPlayer extends Player {
     }
 
     public static void print(Estado root) {
-        List<List<String>> lines = new ArrayList<List<String>>();
-
-        List<Estado> level = new ArrayList<Estado>();
-        List<Estado> next = new ArrayList<Estado>();
-
-        level.add(root);
-        int nn = 1;
-
-        int widest = 0;
-
-        while (nn != 0) {
-            List<String> line = new ArrayList<String>();
-
-            nn = 0;
-
-            for (Estado n : level) {
-                if (n == null) {
-                    line.add(null);
-
-                    next.add(null);
-                    next.add(null);
-                } else {
-                    String aa = n.toString();
-                    line.add(aa);
-                    if (aa.length() > widest) {
-                        widest = aa.length();
-                    }
-
-                    for (Estado aux : n.hijos) {
-                        next.add(aux);
-                        nn++;
-                    }
+        if(root != null){
+            Queue<Estado> cola_nivel = new LinkedList<>();
+            cola_nivel.clear();
+            cola_nivel.add(root);
+            while(!cola_nivel.isEmpty()){
+                Estado temp = cola_nivel.remove();
+                System.out.println(temp.toString());
+                for(Estado n : temp.hijos){
+                    cola_nivel.add(n);
                 }
             }
-
-            if (widest % 2 == 1) {
-                widest++;
-            }
-
-            lines.add(line);
-
-            List<Estado> tmp = level;
-            level = next;
-            next = tmp;
-            next.clear();
         }
-
-        int perpiece = lines.get(lines.size() - 1).size() * (widest + 4);
-        for (int i = 0; i < lines.size(); i++) {
-            List<String> line = lines.get(i);
-            int hpw = (int) Math.floor(perpiece / 2f) - 1;
-
-            if (i > 0) {
-                for (int j = 0; j < line.size(); j++) {
-
-                    // split node
-                    char c = ' ';
-                    if (j % 2 == 1) {
-                        if (line.get(j - 1) != null) {
-                            c = (line.get(j) != null) ? '┴' : '┘';
-                        } else {
-                            if (j < line.size() && line.get(j) != null) {
-                                c = '└';
-                            }
-                        }
-                    }
-                    System.out.print(c);
-
-                    // lines and spaces
-                    if (line.get(j) == null) {
-                        for (int k = 0; k < perpiece - 1; k++) {
-                            System.out.print(" ");
-                        }
-                    } else {
-
-                        for (int k = 0; k < hpw; k++) {
-                            System.out.print(j % 2 == 0 ? " " : "─");
-                        }
-                        System.out.print(j % 2 == 0 ? "┌" : "┐");
-                        for (int k = 0; k < hpw; k++) {
-                            System.out.print(j % 2 == 0 ? "─" : " ");
-                        }
-                    }
-                }
-                System.out.println();
-            }
-
-            // print line of numbers
-            for (int j = 0; j < line.size(); j++) {
-
-                String f = line.get(j);
-                if (f == null) {
-                    f = "";
-                }
-                int gap1 = (int) Math.ceil(perpiece / 2f - f.length() / 2f);
-                int gap2 = (int) Math.floor(perpiece / 2f - f.length() / 2f);
-
-                // a number
-                for (int k = 0; k < gap1; k++) {
-                    System.out.print(" ");
-                }
-                System.out.print(f);
-                for (int k = 0; k < gap2; k++) {
-                    System.out.print(" ");
-                }
-            }
-            System.out.println();
-
-            perpiece /= 2;
-        }
-
     }
 
     public class Estado {
@@ -254,7 +157,7 @@ public class IAPlayer extends Player {
         /**
          * Indica el valor heurístico del estado
          */
-        private int valor;
+        private int valor, nivel;
 
         /**
          * Jugador que le toca jugar este estado.
@@ -266,11 +169,12 @@ public class IAPlayer extends Player {
          *
          * @param tablero Dato que alberga el Estado
          */
-        public Estado(int[][] tablero, int jugador) {
+        public Estado(int[][] tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = new Tablero(tablero);
             this.estadoFinal = false;
             this.jugador = jugador;
+            this.nivel = nivel;
             if (jugador == Conecta.JUGADOR1) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -278,11 +182,12 @@ public class IAPlayer extends Player {
             }
         }
 
-        public Estado(Tablero tablero, int jugador) {
+        public Estado(Tablero tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = tablero.clone();
             this.estadoFinal = false;
             this.jugador = jugador;
+            this.nivel = nivel;
             if (jugador == Conecta.JUGADOR1) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -304,7 +209,13 @@ public class IAPlayer extends Player {
 
         @Override
         public String toString() {
-            return "Estado{" + "estadoFinal= " + estadoFinal + ", valor= " + valor + ", jugador= " + jugador + ", tablero=" + tablero.toString() + '}';
+            String player;
+            if(jugador == Conecta.JUGADOR1){
+                player = "Humano";
+            }else{
+                player = "Máquina";
+            }
+            return "Estado{" + "Nivel= " + nivel + ", estadoFinal= " + estadoFinal + ", valor= " + valor + ", jugador= " + player + "}\nTablero=" + tablero.toString();
         }
 
     }
