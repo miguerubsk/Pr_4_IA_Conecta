@@ -121,15 +121,94 @@ public class IAPlayer extends Player {
         }
     }
 
+    /**
+     * Comprueba la cantidad de trios que existen en el tablero
+     * @param tablero tablero del que se quieren comprobar los trios
+     * @return diferencia entre los trios que que tengo yo y los que tiene el oponente
+     */
+    private int trios(Tablero tablero) {
+        // Evaluacion de los pares de fichas adyacentes
+
+        int mias = 0; // num de pare de casillas del jugador
+        int suyas = 0;
+
+        int i, j;
+        int casillaActual, casillaVecina, casillaVecina2;
+
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = 0; j <= COLUMNAS - 1; j++) {
+                if (tablero.existeFicha(i, j)) {
+                    // Esta ocupada
+                    casillaActual = tablero.obtenerCasilla(i, j);
+                    if (i > 1) {
+                        // Trios en vertical |
+                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
+                        casillaVecina2 = tablero.obtenerCasilla(i - 2, j);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                        // Trios en diagonal /  por arriba derecha
+                        if (j < COLUMNAS - 2 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j + 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+
+                        // Trios en diagonal \ por arriba izquierda
+                        if (j > 1 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j - 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+                    }
+                    // Trios en horizontal -
+                    if (j > 1) {
+                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
+                        casillaVecina2 = tablero.obtenerCasilla(i, j - 2);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return (mias - suyas);
+    }
+
     public static void print(Estado root) {
-        if(root != null){
+        if (root != null) {
             Queue<Estado> cola_nivel = new LinkedList<>();
             cola_nivel.clear();
             cola_nivel.add(root);
-            while(!cola_nivel.isEmpty()){
+            while (!cola_nivel.isEmpty()) {
                 Estado temp = cola_nivel.remove();
                 System.out.println(temp.toString());
-                for(Estado n : temp.hijos){
+                for (Estado n : temp.hijos) {
                     cola_nivel.add(n);
                 }
             }
@@ -210,9 +289,9 @@ public class IAPlayer extends Player {
         @Override
         public String toString() {
             String player;
-            if(jugador == Conecta.JUGADOR1){
+            if (jugador == Conecta.JUGADOR1) {
                 player = "Humano";
-            }else{
+            } else {
                 player = "Máquina";
             }
             return "Estado{" + "Nivel= " + nivel + ", estadoFinal= " + estadoFinal + ", valor= " + valor + ", jugador= " + player + "}\nTablero=" + tablero.toString();
@@ -290,6 +369,14 @@ public class IAPlayer extends Player {
             }
             aux += "\n";
             return aux;
+        }
+        
+        private boolean existeFicha(int fila, int columna){
+            return this.boton_int[fila][columna] != Conecta.VACIO;
+        }
+        
+        private int obtenerCasilla(int fila, int columna){
+            return this.boton_int[fila][columna];
         }
 
         /**
