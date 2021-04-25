@@ -79,16 +79,17 @@ public class IAPlayer extends Player {
             for (int i = 0; i < COLUMNAS; i++) {
                 if (!estadoActual.tablero.fullColumn(i)) {
                     Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador(), profundidadActual + 1);
+                    estadoSig.columna = i;
                     int ganador = estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA);
                     switch (ganador) {
                         case Conecta.JUGADOR1:
                             estadoSig.setEstadoFinal();
-                            estadoSig.valor = -1;
+                            estadoSig.valor = Integer.MIN_VALUE;
                             estadoActual.hijos.add(estadoSig);
                             break;
                         case Conecta.JUGADOR2:
                             estadoSig.setEstadoFinal();
-                            estadoSig.valor = 1;
+                            estadoSig.valor = Integer.MAX_VALUE;
                             estadoActual.hijos.add(estadoSig);
                             break;
                         default:
@@ -98,40 +99,55 @@ public class IAPlayer extends Player {
                     }
                 }
             }
-            if (estadoActual.hijos.isEmpty()) {
+            if (estadoActual.hijos.isEmpty() && !estadoActual.estadoFinal) {
                 estadoActual.valor = 0;
                 estadoActual.setEstadoFinal();
             }
         }
-        switch (estadoActual.jugador) {
-            case Conecta.JUGADOR2:
-                for (Estado hijo : estadoActual.hijos) {
-                    if (hijo.valor > estadoActual.valor) {
-                        estadoActual.valor = hijo.valor;
+        if (estadoActual.estadoFinal) {
+            estadoActual.valor = ponderarTablero(estadoActual.tablero);
+        }else{
+            switch (estadoActual.jugador) {
+                case Conecta.JUGADOR2:
+                    for (Estado hijo : estadoActual.hijos) {
+                        if (hijo.valor > estadoActual.valor) {
+                            estadoActual.valor = hijo.valor;
+                        }
                     }
-                }
-                break;
-            case Conecta.JUGADOR1:
-                for (Estado hijo : estadoActual.hijos) {
-                    if (hijo.valor < estadoActual.valor) {
-                        estadoActual.valor = hijo.valor;
+                    break;
+                case Conecta.JUGADOR1:
+                    for (Estado hijo : estadoActual.hijos) {
+                        if (hijo.valor < estadoActual.valor) {
+                            estadoActual.valor = hijo.valor;
+                        }
                     }
-                }
-                break;
+                    break;
+            }
         }
+
+        estadoActual.tablero = null; //eliminamos el tablero para ahorrar memoria
+    }
+    
+    private int ponderarTablero(Tablero tablero){
+        int triosA = triosA(tablero);
+        int paresA = paresA(tablero);
+        int triosE = triosE(tablero);
+        int paresE = paresE(tablero);
+        int yo = (triosA*1000 + paresA *100);
+        int enemigo = (triosE*1000 + paresE *100);
+        
+        return  (yo - enemigo);
     }
 
     /**
-     * Comprueba la cantidad de trios que existen en el tablero
+     * Comprueba la cantidad de trios propios que existen en el tablero
+     *
      * @param tablero tablero del que se quieren comprobar los trios
-     * @return diferencia entre los trios que que tengo yo y los que tiene el oponente
+     * @return número de trios del propio jugador que hay en el tablero
      */
-    private int trios(Tablero tablero) {
-        // Evaluacion de los pares de fichas adyacentes
+    private int triosA(Tablero tablero) {
 
-        int mias = 0; // num de pare de casillas del jugador
-        int suyas = 0;
-
+        int mias = 0; // num de trios de fichas del jugador
         int i, j;
         int casillaActual, casillaVecina, casillaVecina2;
 
@@ -148,9 +164,6 @@ public class IAPlayer extends Player {
                             if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
                                 mias++;
                             }
-                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                suyas++;
-                            }
                         }
                         // Trios en diagonal /  por arriba derecha
                         if (j < COLUMNAS - 2 && i > 1) {
@@ -159,9 +172,6 @@ public class IAPlayer extends Player {
                             if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
                                 if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
                                     mias++;
-                                }
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                    suyas++;
                                 }
                             }
                         }
@@ -174,9 +184,6 @@ public class IAPlayer extends Player {
                                 if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
                                     mias++;
                                 }
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                    suyas++;
-                                }
                             }
                         }
                     }
@@ -188,6 +195,68 @@ public class IAPlayer extends Player {
                             if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
                                 mias++;
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        return mias;
+    }
+
+    /**
+     * Comprueba el número de tríos enemigos en el tablero
+     *
+     * @param tablero tablero que se quiere comprobar
+     * @return número de tríos del oponente que se encuentran en el tablero
+     */
+    private int triosE(Tablero tablero) {
+
+        int suyas = 0; // num de trios de fichas del jugador
+        int i, j;
+        int casillaActual, casillaVecina, casillaVecina2;
+
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = 0; j <= COLUMNAS - 1; j++) {
+                if (tablero.existeFicha(i, j)) {
+                    // Esta ocupada
+                    casillaActual = tablero.obtenerCasilla(i, j);
+                    if (i > 1) {
+                        // Trios en vertical |
+                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
+                        casillaVecina2 = tablero.obtenerCasilla(i - 2, j);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                        // Trios en diagonal /  por arriba derecha
+                        if (j < COLUMNAS - 2 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j + 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+
+                        // Trios en diagonal \ por arriba izquierda
+                        if (j > 1 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j - 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+                    }
+                    // Trios en horizontal -
+                    if (j > 1) {
+                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
+                        casillaVecina2 = tablero.obtenerCasilla(i, j - 2);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
                             if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
                                 suyas++;
                             }
@@ -197,7 +266,132 @@ public class IAPlayer extends Player {
             }
         }
 
-        return (mias - suyas);
+        return suyas;
+    }
+
+    /**
+     * Comprueba el número de pares propios en el tablero
+     *
+     * @param tablero tablero que se quiere comprobar
+     * @return número de pares del propio jugador que se encuentran en el
+     * tablero
+     */
+    private int paresA(Tablero tablero) {
+
+        int mias = 0; // num de pares de casillas del jugador
+
+        int i, j;
+        int casillaActual, casillaVecina;
+
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = 0; j <= COLUMNAS - 1; j++) {
+                if (tablero.existeFicha(i, j)) {
+                    // Esta ocupada
+                    casillaActual = tablero.obtenerCasilla(i, j);
+                    if (i > 0) {
+                        // Pares vertical |
+                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
+                        if (casillaActual == casillaVecina) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                        }
+                        // Pares en diagonal /  por arriba derecha
+                        if (j < COLUMNAS - 1 && i > 0) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
+                            if (casillaActual == casillaVecina) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                            }
+                        }
+
+                        // Pares en diagonal \ por arriba izquierda
+                        if (j > 0 && i > 0) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
+                            if (casillaActual == casillaVecina) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                            }
+                        }
+                    }
+                    // Pares horizontal -
+                    if (j > 0) {
+                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
+                        if (casillaActual == casillaVecina) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return mias;
+    }
+
+    /**
+     * Comprueba el número de pares enemigos en el tablero
+     *
+     * @param tablero tablero que se quiere comprobar
+     * @return número de pares del oponente que se encuentran en el tablero
+     */
+    private int paresE(Tablero tablero) {
+
+        int suyas = 0; // num de pares de casillas del jugador
+
+        int i, j;
+        int casillaActual, casillaVecina;
+
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = 0; j <= COLUMNAS - 1; j++) {
+                if (tablero.existeFicha(i, j)) {
+                    // Esta ocupada
+                    casillaActual = tablero.obtenerCasilla(i, j);
+                    if (i > 0) {
+                        // Pares vertical |
+                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
+                        if (casillaActual == casillaVecina) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                        // Pares en diagonal /  por arriba derecha
+                        if (j < COLUMNAS - 1 && i > 0) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
+                            if (casillaActual == casillaVecina) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+
+                        // Pares en diagonal \ por arriba izquierda
+                        if (j > 0 && i > 0) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
+                            if (casillaActual == casillaVecina) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                    suyas++;
+                                }
+                            }
+                        }
+                    }
+                    // Pares horizontal -
+                    if (j > 0) {
+                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
+                        if (casillaActual == casillaVecina) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return suyas;
     }
 
     public static void print(Estado root) {
@@ -236,7 +430,7 @@ public class IAPlayer extends Player {
         /**
          * Indica el valor heurístico del estado
          */
-        private int valor, nivel;
+        private int valor, nivel, columna;
 
         /**
          * Jugador que le toca jugar este estado.
@@ -370,12 +564,12 @@ public class IAPlayer extends Player {
             aux += "\n";
             return aux;
         }
-        
-        private boolean existeFicha(int fila, int columna){
+
+        private boolean existeFicha(int fila, int columna) {
             return this.boton_int[fila][columna] != Conecta.VACIO;
         }
-        
-        private int obtenerCasilla(int fila, int columna){
+
+        private int obtenerCasilla(int fila, int columna) {
             return this.boton_int[fila][columna];
         }
 
