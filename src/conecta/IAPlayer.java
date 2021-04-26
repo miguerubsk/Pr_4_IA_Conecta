@@ -40,7 +40,7 @@ public class IAPlayer extends Player {
     private static final int COLUMNAS = 4;
     private static final int FILAS = 4;
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 7;
+    private static final int PROFUNDIDAD_MAX = 5;
 
     private int alpha;
     private int beta;
@@ -68,6 +68,12 @@ public class IAPlayer extends Player {
 
         construirArbolMiniMax(estadoActual, 1);
 
+        for (Estado e : estadoActual.hijos) {
+            if (estadoActual.valor == e.valor) {
+                columna = e.columna;
+            }
+        }
+
         print(estadoActual);
 
         return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
@@ -84,11 +90,13 @@ public class IAPlayer extends Player {
                     switch (ganador) {
                         case Conecta.JUGADOR1:
                             estadoSig.setEstadoFinal();
+                            estadoSig.setHayGanador();
                             estadoSig.valor = Integer.MIN_VALUE;
                             estadoActual.hijos.add(estadoSig);
                             break;
                         case Conecta.JUGADOR2:
                             estadoSig.setEstadoFinal();
+                            estadoSig.setHayGanador();
                             estadoSig.valor = Integer.MAX_VALUE;
                             estadoActual.hijos.add(estadoSig);
                             break;
@@ -104,39 +112,45 @@ public class IAPlayer extends Player {
                 estadoActual.setEstadoFinal();
             }
         }
-        if (estadoActual.estadoFinal) {
+        if (profundidadActual == PROFUNDIDAD_MAX) {
+            estadoActual.setEstadoFinal();
+        }
+
+        if (estadoActual.estadoFinal && !estadoActual.hayGanador) {
             estadoActual.valor = ponderarTablero(estadoActual.tablero);
-        }else{
-            switch (estadoActual.jugador) {
-                case Conecta.JUGADOR2:
-                    for (Estado hijo : estadoActual.hijos) {
-                        if (hijo.valor > estadoActual.valor) {
-                            estadoActual.valor = hijo.valor;
+        } else {
+            if (!estadoActual.hayGanador) {
+                switch (estadoActual.jugador) {
+                    case Conecta.JUGADOR2:
+                        for (Estado hijo : estadoActual.hijos) {
+                            if (hijo.valor > estadoActual.valor) {
+                                estadoActual.valor = hijo.valor;
+                            }
                         }
-                    }
-                    break;
-                case Conecta.JUGADOR1:
-                    for (Estado hijo : estadoActual.hijos) {
-                        if (hijo.valor < estadoActual.valor) {
-                            estadoActual.valor = hijo.valor;
+                        break;
+                    case Conecta.JUGADOR1:
+                        for (Estado hijo : estadoActual.hijos) {
+                            if (hijo.valor < estadoActual.valor) {
+                                estadoActual.valor = hijo.valor;
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
             }
         }
 
         estadoActual.tablero = null; //eliminamos el tablero para ahorrar memoria
     }
-    
-    private int ponderarTablero(Tablero tablero){
+
+    private int ponderarTablero(Tablero tablero) {
         int triosA = triosA(tablero);
         int paresA = paresA(tablero);
         int triosE = triosE(tablero);
         int paresE = paresE(tablero);
-        int yo = (triosA*1000 + paresA *100);
-        int enemigo = (triosE*1000 + paresE *100);
-        
-        return  (yo - enemigo);
+        int yo = (triosA * 1000 + paresA * 100);
+        int enemigo = (triosE * 1000 + paresE * 100);
+
+        return (yo - enemigo);
     }
 
     /**
@@ -425,7 +439,7 @@ public class IAPlayer extends Player {
          * Indica si el estado actual es estado final. Es estado final si es
          * solución o si es nodo hoja.
          */
-        private boolean estadoFinal;
+        private boolean estadoFinal, hayGanador;
 
         /**
          * Indica el valor heurístico del estado
@@ -448,6 +462,7 @@ public class IAPlayer extends Player {
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
+            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR1) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -461,6 +476,7 @@ public class IAPlayer extends Player {
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
+            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR1) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -469,7 +485,11 @@ public class IAPlayer extends Player {
         }
 
         private void setEstadoFinal() {
-            this.estadoFinal = false;
+            this.estadoFinal = true;
+        }
+
+        private void setHayGanador() {
+            this.estadoFinal = true;
         }
 
         private int alternarJugador() {
