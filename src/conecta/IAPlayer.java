@@ -37,10 +37,10 @@ import java.util.Queue;
  */
 public class IAPlayer extends Player {
 
-    private static final int COLUMNAS = 4;
-    private static final int FILAS = 4;
+    private static final int COLUMNAS = 7;
+    private static final int FILAS = 6;
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 5;
+    private static final int PROFUNDIDAD_MAX = 7;
 
     private int alpha;
     private int beta;
@@ -74,7 +74,7 @@ public class IAPlayer extends Player {
             }
         }
 
-        print(estadoActual);
+//        print(estadoActual);
 
         return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
 
