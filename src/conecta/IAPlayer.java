@@ -154,7 +154,8 @@ public class IAPlayer extends Player {
      * Comprueba la cantidad de trios propios que existen en el tablero
      *
      * @param tablero tablero del que se quieren comprobar los trios
-     * @return número de trios del propio jugador que hay en el tablero
+     * @return Pair que contine los trios del jugador como clave y los del
+     * enemigo como valor
      */
     private Pair<Integer, Integer> trios(Tablero tablero) {
 
@@ -233,8 +234,8 @@ public class IAPlayer extends Player {
      * Comprueba el número de pares propios en el tablero
      *
      * @param tablero tablero que se quiere comprobar
-     * @return número de pares del propio jugador que se encuentran en el
-     * tablero
+     * @return Pair que contine los pares del jugador como clave y los del
+     * enemigo como valor
      */
     private Pair<Integer, Integer> pares(Tablero tablero) {
 
