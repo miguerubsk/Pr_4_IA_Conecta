@@ -440,28 +440,19 @@ public class IAPlayer extends Player {
      */
     @Override
     public int jugada(Grid tablero, int conecta) {
-        boolean buenaTirada = false;
-        int i;
-        int columnaCopia = -1;
 
-        Tablero raiz = new Tablero(tablero.toArray());
+        // ...
+        // Calcular la mejor columna posible donde hacer nuestra jugada
+        //Pintar Ficha (sustituir 'columna' por el valor adecuado)
+        //Pintar Ficha
+        Tablero tableroRaiz = new Tablero(tablero.toArray());
         
-        while (!buenaTirada) {
-            columnaCopia = buscarMovimiento(raiz, Conecta.JUGADOR2);
+        int columna = buscarMovimiento(tableroRaiz, Conecta.JUGADOR2);
+        
 
-            i = tablero.getFilas() - 1;
-            while (!buenaTirada && i >= 0) {
-                if (tablero.getButton(i, columnaCopia) == 0) {
-                    buenaTirada = true;
-                } else {
-                    i--;
-                }
-            }
-        }
+        return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
 
-        m_columna = columnaCopia;
-        return tablero.checkWin(tablero.setButton(m_columna, Conecta.JUGADOR2), m_columna, conecta);
-    }
+    } // jugada
 
     public static void print(Estado root) {
         if (root != null) {
