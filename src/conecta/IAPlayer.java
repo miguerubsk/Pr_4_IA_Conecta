@@ -19,7 +19,6 @@ package conecta;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
-import javafx.util.Pair;
 
 /**
  *
@@ -37,209 +36,207 @@ import javafx.util.Pair;
  */
 public class IAPlayer extends Player {
 
+    //Profundidad hasta la que vamos a explorar el árbol de juego
+    public final static int NIVEL_DEFECTO = 7;
     private static final int COLUMNAS = 7;
     private static final int FILAS = 6;
-    private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 7;
-
+    private int m_columna = -1;
     private int alpha;
     private int beta;
 
-    /**
-     *
-     * @param tablero Representación del tablero de juego
-     * @param conecta Número de fichas consecutivas para ganar
-     * @return Jugador ganador (si lo hay)
-     */
-    @Override
-    public int jugada(Grid tablero, int conecta) {
+    /* Nos permite cambiar entre el jugador y la maquina */
+    public static int alternarJugador(int jugador) {
+        if (jugador == Conecta.JUGADOR1) {
+            return Conecta.JUGADOR2;
+        } else {
+            return Conecta.JUGADOR1;
+        }
+    }
+    /* Parametros iniciales de la poda, corresponde a -infinito y +infinito */
+    private static final int MAXIMO = Integer.MAX_VALUE;
+    private static final int MINIMO = Integer.MIN_VALUE;
+    private static double[] _pesos = {1, 2, 3};//Vector de pesos  
 
-        // Renovamos los valores cada vez que se llama al metodo
+    public int buscarMovimiento(Tablero tablero, int jugador) {
+        int valorSucesor, fila;
+        int mejorValor = Integer.MIN_VALUE;
+        int _jugadorMax = jugador;
+
+        /* Habilitar para la poda alfa-beta */
         alpha = Integer.MIN_VALUE;
         beta = Integer.MAX_VALUE;
 
-        // ...
-        // Calcular la mejor columna posible donde hacer nuestra jugada
-        //Pintar Ficha (sustituir 'columna' por el valor adecuado)
-        //Pintar Ficha
-        int columna = getRandomColumn(tablero);
+        for (int columna = 0; columna <= COLUMNAS - 1; columna++) {
+            fila = FILAS - 1;
+            while (fila >= 0 && tablero.obtenerCasilla(fila, columna) != 0) {
+                fila--;
+            }
+            if (fila != -1) {//Si encontramos casilla vacia
+                Tablero resultado = new Tablero(tablero);//Generamos tablero
+                resultado.setButton(columna, _jugadorMax);//y colocamos ficha
 
-        Estado estadoActual = new Estado(tablero.toArray(), Conecta.JUGADOR1, 1);
+                valorSucesor = AlfaBeta(resultado, alternarJugador(_jugadorMax), 1);//Valor del tablero sucesor
+                //valorSucesor = MINIMAX(resultado, alternarJugador(jugador), 1);
 
-        construirArbolMiniMax(estadoActual, 1);
+                resultado = null;//Eliminar el tablero y nos quedamos con su valor
 
-        for (Estado e : estadoActual.hijos) {
-            if (estadoActual.valor == e.valor) {
-                columna = e.columna;
+                if (valorSucesor > mejorValor) {//Si obtenemos un valor mayor
+                    mejorValor = valorSucesor;//actualizar
+                    m_columna = columna;//y nos quedamos con su columna
+                    alpha = mejorValor;
+                }
             }
         }
-
-//        print(estadoActual);
-        return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
+        return (m_columna);//Devolver la mejor columna
 
     }
 
-    private void construirArbolMiniMax(Estado estadoActual, int profundidadActual) {
-        if (!estadoActual.estadoFinal && profundidadActual <= PROFUNDIDAD_MAX) {
-            for (int i = 0; i < COLUMNAS; i++) {
-                if (!estadoActual.tablero.fullColumn(i)) {
-                    Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador(), profundidadActual + 1);
-                    estadoSig.columna = i;
-                    int ganador = estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA);
-                    switch (ganador) {
-                        case Conecta.JUGADOR1:
-                            estadoSig.setEstadoFinal();
-                            estadoSig.setHayGanador();
-                            estadoSig.valor = Integer.MIN_VALUE;
-                            estadoActual.hijos.add(estadoSig);
-                            break;
-                        case Conecta.JUGADOR2:
-                            estadoSig.setEstadoFinal();
-                            estadoSig.setHayGanador();
-                            estadoSig.valor = Integer.MAX_VALUE;
-                            estadoActual.hijos.add(estadoSig);
-                            break;
-                        default:
-                            estadoActual.hijos.add(estadoSig);
-                            construirArbolMiniMax(estadoSig, profundidadActual + 1);
-                            break;
+    public boolean tableroLleno(Tablero tablero) {
+        boolean lleno = true;
+        int i = 0;
+        int j;
+
+        while (lleno && i < FILAS) {
+            j = 0;
+            while (lleno && j < COLUMNAS) {
+                if (tablero.obtenerCasilla(i, j) == 0) {
+                    lleno = false;
+                } else {
+                    j = j + 1;
+                }
+            }
+            i = i + 1;
+        }
+
+        return lleno;
+    }
+
+    public int AlfaBeta(Tablero tablero, int jugador, int capa) {
+
+        /* Casos bases */
+ /* Situacion de empate */
+        if (tableroLleno(tablero) && cuatroEnRaya(tablero) == 0) {
+            return (0);
+        }
+
+        /* Victoria del jugador 1!! */
+        if (cuatroEnRaya(tablero) == Conecta.JUGADOR1) {
+            return (MAXIMO);
+        }
+
+        /* Victoria del jugador 2!! */
+        if (cuatroEnRaya(tablero) == Conecta.JUGADOR2) {
+            return (MINIMO);
+        }
+
+        /* Estamos en nodos terminales */
+        if (capa == (NIVEL_DEFECTO)) {
+            return (valoracion(tablero, jugador));//Valorar el estado terminal
+        }
+
+        int valorSucesor, fila;
+
+        for (int columna = 0; columna <= COLUMNAS - 1; columna++) {
+            fila = FILAS - 1;
+            while (fila >= 0 && tablero.obtenerCasilla(fila, columna) != 0) {
+                fila--;
+            }
+            if (fila != -1) {
+                Tablero resultado = new Tablero(tablero);
+                resultado.setButton(columna, jugador);
+
+                valorSucesor = AlfaBeta(resultado, alternarJugador(jugador), (capa + 1));
+                resultado = null;
+
+                if (esCapaMAX(capa)) {//Si estamos en una capaMAX
+                    alpha = maximo(alpha, valorSucesor);//Actualizamos el valor de alfa
+                    if (alpha >= beta) {//o podamos
+                        return alpha;
+                    }
+                } else {//Si es una capaMIN
+                    beta = minimo(beta, valorSucesor);//Actualizar beta
+                    if (beta <= alpha) {// o podamos
+                        return beta;
                     }
                 }
             }
-            if (estadoActual.hijos.isEmpty() && !estadoActual.estadoFinal) {
-                estadoActual.valor = 0;
-                estadoActual.setEstadoFinal();
-            }
         }
-        if (profundidadActual == PROFUNDIDAD_MAX) {
-            estadoActual.setEstadoFinal();
-        }
-
-        if (estadoActual.estadoFinal && !estadoActual.hayGanador) {
-            estadoActual.valor = ponderarTablero(estadoActual.tablero);
+        if (esCapaMAX(capa)) {//Devolver a la capa superior
+            return alpha;//alfa si es capaMAX
         } else {
-            if (!estadoActual.hayGanador) {
-                switch (estadoActual.jugador) {
-                    case Conecta.JUGADOR2:
-                        for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor > estadoActual.valor) {
-                                estadoActual.valor = hijo.valor;
-                            }
-                        }
-                        break;
-                    case Conecta.JUGADOR1:
-                        for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor < estadoActual.valor) {
-                                estadoActual.valor = hijo.valor;
-                            }
-                        }
-                        break;
-                }
-            }
+            return beta;//beta si es capaMIN
         }
-
-        estadoActual.tablero = null; //eliminamos el tablero para ahorrar memoria
     }
 
-    private int ponderarTablero(Tablero tablero) {
-        Pair<Integer, Integer> trios = trios(tablero);
-        Pair<Integer, Integer> pares = pares(tablero);
-        int yo = (trios.getKey() * 1000 + pares.getKey() * 100);
-        int enemigo = (trios.getValue() * 1000 + pares.getValue() * 100);
-
-        return (yo - enemigo);
+    public boolean esCapaMIN(int capa) {//Si es una capa impar,es capaMIN
+        return ((capa % 2) == 1);
     }
 
-    /**
-     * Comprueba la cantidad de trios propios que existen en el tablero
-     *
-     * @param tablero tablero del que se quieren comprobar los trios
-     * @return Pair que contine los trios del jugador como clave y los del
-     * enemigo como valor
-     */
-    private Pair<Integer, Integer> trios(Tablero tablero) {
+    public boolean esCapaMAX(int capa) { //Si es una capa par,es capaMAX
+        return ((capa % 2) == 0);
+    }
 
-        int mias = 0; // num de trios de fichas del jugador
-        int suyas = 0;
+    public int maximo(int v1, int v2) {
+        if (v1 > v2) {
+            return (v1);
+        } else {
+            return (v2);
+        }
+    }
+
+    public int minimo(int v1, int v2) {
+        if (v1 < v2) {
+            return (v1);
+        } else {
+            return (v2);
+        }
+    }
+
+    public int valoracion(Tablero tablero, int jugador) {
+        return ((int) (java.lang.Math.round(_pesos[0] * ponderacion(tablero))
+                + java.lang.Math.round(_pesos[1] * parejas(tablero))
+                + java.lang.Math.round(_pesos[2] * trios(tablero))));
+    }
+
+    private int ponderacion(Tablero tablero) {
+        //   ponderacion del tablero: 1 2 3 4 3 2 1
+
+        int mias = 0; // Valor de mi jugada
+        int suyas = 0;//Valor de la jugada de la maquina
+
+        int medio = (int) java.lang.Math.floor(COLUMNAS / 2);
+        int peso;
         int i, j;
-        int casillaActual, casillaVecina, casillaVecina2;
 
+        // primera mitad del tablero (incrementar peso de las columnas)
         for (i = FILAS - 1; i >= 0; i--) {
-            for (j = 0; j <= COLUMNAS - 1; j++) {
-                if (tablero.existeFicha(i, j)) {
-                    // Esta ocupada
-                    casillaActual = tablero.obtenerCasilla(i, j);
-                    if (i > 1) {
-                        // Trios en vertical |
-                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
-                        casillaVecina2 = tablero.obtenerCasilla(i - 2, j);
-                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
-                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
-                                mias++;
-                            }
-                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                suyas++;
-                            }
-                        }
-                        // Trios en diagonal /  por arriba derecha
-                        if (j < COLUMNAS - 2 && i > 1) {
-                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
-                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j + 2);
-                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
-                                    mias++;
-                                }
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                    suyas++;
-                                }
-                            }
-                        }
-
-                        // Trios en diagonal \ por arriba izquierda
-                        if (j > 1 && i > 1) {
-                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
-                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j - 2);
-                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
-                                    mias++;
-                                }
-                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                    suyas++;
-                                }
-                            }
-                        }
-                    }
-                    // Trios en horizontal -
-                    if (j > 1) {
-                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
-                        casillaVecina2 = tablero.obtenerCasilla(i, j - 2);
-                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
-                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
-                                mias++;
-                            }
-                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
-                                suyas++;
-                            }
-                        }
-                    }
+            for (j = medio, peso = medio + 1; j >= 0; j--, peso--) {
+                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {//Si es una ficha mia
+                    mias += peso;//Incremento mi jugada con el peso de la ficha
+                } else if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {//Si es ficha de la maquina
+                    suyas += peso;//Incrementar su jugada con el peso de su ficha
                 }
             }
         }
 
-        Pair<Integer, Integer> par = new Pair<>(mias, suyas);
-        return par;
+        // segunda mitad del tablero (decrementar peso de las columnas)
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = medio + 1, peso = medio; j <= COLUMNAS - 1; j++, peso--) {
+                if (tablero.obtenerCasilla(i, j) == 1) {
+                    mias += peso;
+                } else if (tablero.obtenerCasilla(i, j) == 2) {
+                    suyas += peso;
+                }
+            }
+        }
+
+        return (mias - suyas);//Devolver el valor de la jugada
     }
 
-    /**
-     * Comprueba el número de pares propios en el tablero
-     *
-     * @param tablero tablero que se quiere comprobar
-     * @return Pair que contine los pares del jugador como clave y los del
-     * enemigo como valor
-     */
-    private Pair<Integer, Integer> pares(Tablero tablero) {
+    private int parejas(Tablero tablero) {
+        // Evaluacion de los pares de fichas adyacentes
 
-        int mias = 0; // num de pares de casillas del jugador
+        int mias = 0; // num de pare de casillas del jugador
         int suyas = 0;
 
         int i, j;
@@ -247,11 +244,11 @@ public class IAPlayer extends Player {
 
         for (i = FILAS - 1; i >= 0; i--) {
             for (j = 0; j <= COLUMNAS - 1; j++) {
-                if (tablero.existeFicha(i, j)) {
+                if (tablero.obtenerCasilla(i, j) != 0) {
                     // Esta ocupada
                     casillaActual = tablero.obtenerCasilla(i, j);
                     if (i > 0) {
-                        // Pares vertical |
+                        // Pares vertical
                         casillaVecina = tablero.obtenerCasilla(i - 1, j);
                         if (casillaActual == casillaVecina) {
                             if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
@@ -287,7 +284,7 @@ public class IAPlayer extends Player {
                             }
                         }
                     }
-                    // Pares horizontal -
+                    // Pares horizontal
                     if (j > 0) {
                         casillaVecina = tablero.obtenerCasilla(i, j - 1);
                         if (casillaActual == casillaVecina) {
@@ -303,8 +300,167 @@ public class IAPlayer extends Player {
             }
         }
 
-        Pair<Integer, Integer> par = new Pair<>(mias, suyas);
-        return par;
+        return (mias - suyas);
+    }
+
+    private int trios(Tablero tablero) {
+        // Evaluacion de los pares de fichas adyacentes
+
+        int mias = 0; // num de pare de casillas del jugador
+        int suyas = 0;
+
+        int i, j;
+        int casillaActual, casillaVecina, casillaVecina2;
+
+        for (i = FILAS - 1; i >= 0; i--) {
+            for (j = 0; j <= COLUMNAS - 1; j++) {
+                if (tablero.obtenerCasilla(i, j) != 0) {
+                    // Esta ocupada
+                    casillaActual = tablero.obtenerCasilla(i, j);
+                    if (i > 1) {
+                        // Trios en vertical
+                        casillaVecina = tablero.obtenerCasilla(i - 1, j);
+                        casillaVecina2 = tablero.obtenerCasilla(i - 2, j);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                suyas++;
+                            }
+                        }
+                        // Trios en diagonal /  por arriba derecha
+                        if (j < COLUMNAS - 2 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j + 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j + 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    suyas++;
+                                }
+                            }
+                        }
+
+                        // Trios en diagonal \ por arriba izquierda
+                        if (j > 1 && i > 1) {
+                            casillaVecina = tablero.obtenerCasilla(i - 1, j - 1);
+                            casillaVecina2 = tablero.obtenerCasilla(i - 2, j - 2);
+                            if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    mias++;
+                                }
+                                if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                    suyas++;
+                                }
+                            }
+                        }
+                    }
+                    // Trios en horizontal
+                    if (j > 1) {
+                        casillaVecina = tablero.obtenerCasilla(i, j - 1);
+                        casillaVecina2 = tablero.obtenerCasilla(i, j - 2);
+                        if (casillaActual == casillaVecina && casillaActual == casillaVecina2) {
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR2) {
+                                mias++;
+                            }
+                            if (tablero.obtenerCasilla(i, j) == Conecta.JUGADOR1) {
+                                suyas++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return (mias - suyas);
+    }
+
+    public int cuatroEnRaya(Tablero tablero) {
+        int[][] m_tablero = tablero.boton_int;
+        int i = FILAS - 1;
+        int j;
+        boolean encontrado = false;
+        int jugador = 0;
+        int casilla;
+        while (!encontrado && i >= 0) {
+            j = COLUMNAS - 1;
+            while (!encontrado && j >= 0) {
+                casilla = m_tablero[i][j];
+                if (casilla != 0) {
+                    // Busqueda horizontal
+                    if (j - 3 >= 0) {
+                        if (m_tablero[i][j - 1] == casilla
+                                && m_tablero[i][j - 2] == casilla
+                                && m_tablero[i][j - 3] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        }
+                    }
+                    // Busqueda vertical
+                    if (i + 3 < FILAS) {
+                        if (m_tablero[i + 1][j] == casilla
+                                && m_tablero[i + 2][j] == casilla
+                                && m_tablero[i + 3][j] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        } else {
+                            // Busqueda diagonal 1
+                            if (j - 3 >= 0) {
+                                if (m_tablero[i + 1][j - 1] == casilla
+                                        && m_tablero[i + 2][j - 2] == casilla
+                                        && m_tablero[i + 3][j - 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                            // Busqueda diagonal 2
+                            if (j + 3 < COLUMNAS) {
+                                if (m_tablero[i + 1][j + 1] == casilla
+                                        && m_tablero[i + 2][j + 2] == casilla
+                                        && m_tablero[i + 3][j + 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                        }
+                    }
+                }
+                j = j - 1;
+            }
+            i = i - 1;
+        }
+        return jugador;
+    }
+
+    /**
+     * A partir del tablero fboard obtiene la mejor jugada, determinando la
+     * columna donde colocar El tablero está en la variable m_tablero
+     */
+    @Override
+    public int jugada(Grid tablero, int conecta) {
+        boolean buenaTirada = false;
+        int i;
+        int columnaCopia = -1;
+
+        Tablero raiz = new Tablero(tablero.toArray());
+        
+        while (!buenaTirada) {
+            columnaCopia = buscarMovimiento(raiz, Conecta.JUGADOR2);
+
+            i = tablero.getFilas() - 1;
+            while (!buenaTirada && i >= 0) {
+                if (tablero.getButton(i, columnaCopia) == 0) {
+                    buenaTirada = true;
+                } else {
+                    i--;
+                }
+            }
+        }
+
+        m_columna = columnaCopia;
+        return tablero.checkWin(tablero.setButton(m_columna, Conecta.JUGADOR2), m_columna, conecta);
     }
 
     public static void print(Estado root) {
