@@ -40,7 +40,7 @@ public class IAPlayer extends Player {
     private static final int COLUMNAS = 7;
     private static final int FILAS = 6;
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 7;
+    private static final int PROFUNDIDAD_MAX = 8;
 
     private int alpha;
     private int beta;
