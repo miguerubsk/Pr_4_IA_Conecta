@@ -40,7 +40,7 @@ public class IAPlayer extends Player {
     private static final int COLUMNAS = 7;
     private static final int FILAS = 6;
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 8;
+    private static final int PROFUNDIDAD_MAX = 7;
 
     private int alpha;
     private int beta;
@@ -122,14 +122,14 @@ public class IAPlayer extends Player {
                 switch (estadoActual.jugador) {
                     case Conecta.JUGADOR2:
                         for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor > estadoActual.valor) {
+                            if (hijo.valor < estadoActual.valor) {
                                 estadoActual.valor = hijo.valor;
                             }
                         }
                         break;
                     case Conecta.JUGADOR1:
                         for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor < estadoActual.valor) {
+                            if (hijo.valor > estadoActual.valor) {
                                 estadoActual.valor = hijo.valor;
                             }
                         }
@@ -362,7 +362,7 @@ public class IAPlayer extends Player {
             this.jugador = jugador;
             this.nivel = nivel;
             this.hayGanador = false;
-            if (jugador == Conecta.JUGADOR1) {
+            if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
                 this.valor = Integer.MIN_VALUE;
@@ -376,7 +376,7 @@ public class IAPlayer extends Player {
             this.jugador = jugador;
             this.nivel = nivel;
             this.hayGanador = false;
-            if (jugador == Conecta.JUGADOR1) {
+            if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
                 this.valor = Integer.MIN_VALUE;
