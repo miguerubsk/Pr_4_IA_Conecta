@@ -19,7 +19,6 @@ package conecta;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
-//import javafx.util.Pair;
 
 /**
  *
@@ -695,7 +694,8 @@ public class IAPlayer extends Player {
 
     }
 
-    public class Pair<K extends Object, V extends Object>{
+    public class Pair<K extends Object, V extends Object> {
+
         private K key;
         private V value;
 
@@ -716,7 +716,5 @@ public class IAPlayer extends Player {
         public String toString() {
             return "Pair{" + "key=" + key + ", value=" + value + '}';
         }
-        
-                
     }
 }
