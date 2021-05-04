@@ -17,6 +17,7 @@
 package conecta;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -75,8 +76,8 @@ public class IAPlayer extends Player {
                 Tablero resultado = new Tablero(tablero);//Generamos tablero
                 resultado.setButton(columna, _jugadorMax);//y colocamos ficha
 
-                valorSucesor = AlfaBeta(resultado, alternarJugador(_jugadorMax), 1);//Valor del tablero sucesor
-                //valorSucesor = MINIMAX(resultado, alternarJugador(jugador), 1);
+        Estado estadoActual = new Estado(tablero.toArray(),Conecta.JUGADOR1, 1);
+        estadoActual.jugador = Conecta.JUGADOR1;
 
                 resultado = null;//Eliminar el tablero y nos quedamos con su valor
 
@@ -111,91 +112,52 @@ public class IAPlayer extends Player {
         return lleno;
     }
 
-    public int AlfaBeta(Tablero tablero, int jugador, int capa) {
-
-        /* Casos bases */
- /* Situacion de empate */
-        if (tableroLleno(tablero) && cuatroEnRaya(tablero) == 0) {
-            return (0);
+    private int construirArbolMiniMax(Estado estadoActual, int profundidadActual) {
+        if (profundidadActual == PROFUNDIDAD_MAX) {
+            estadoActual.setEstadoFinal();
+            return ponderarTablero(estadoActual.tablero);
         }
 
-        /* Victoria del jugador 1!! */
-        if (cuatroEnRaya(tablero) == Conecta.JUGADOR1) {
-            return (MAXIMO);
-        }
-
-        /* Victoria del jugador 2!! */
-        if (cuatroEnRaya(tablero) == Conecta.JUGADOR2) {
-            return (MINIMO);
-        }
-
-        /* Estamos en nodos terminales */
-        if (capa == (NIVEL_DEFECTO)) {
-            return (valoracion(tablero, jugador));//Valorar el estado terminal
-        }
-
-        int valorSucesor, fila;
-
-        for (int columna = 0; columna <= COLUMNAS - 1; columna++) {
-            fila = FILAS - 1;
-            while (fila >= 0 && tablero.obtenerCasilla(fila, columna) != 0) {
-                fila--;
-            }
-            if (fila != -1) {
-                Tablero resultado = new Tablero(tablero);
-                resultado.setButton(columna, jugador);
-
-                valorSucesor = AlfaBeta(resultado, alternarJugador(jugador), (capa + 1));
-                resultado = null;
-
-                if (esCapaMAX(capa)) {//Si estamos en una capaMAX
-                    alpha = maximo(alpha, valorSucesor);//Actualizamos el valor de alfa
-                    if (alpha >= beta) {//o podamos
-                        return alpha;
+        if (estadoActual.jugador == Conecta.JUGADOR1) {
+            for (int i = 0; i < COLUMNAS; i++) {
+                if (!estadoActual.tablero.fullColumn(i)) {
+                    Tablero tableroAux = new Tablero(estadoActual.tablero);
+                    Estado estadoSig = new Estado(tableroAux, estadoActual.alternarJugador(), profundidadActual + 1);
+                    switch (estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA)) {
+                        case Conecta.JUGADOR2:
+                            estadoActual.valor = Integer.MAX_VALUE;
+                            break;
+                        case Conecta.JUGADOR1:
+                            estadoActual.valor = Integer.MIN_VALUE;
+                            break;
                     }
-                } else {//Si es una capaMIN
-                    beta = minimo(beta, valorSucesor);//Actualizar beta
-                    if (beta <= alpha) {// o podamos
-                        return beta;
-                    }
+                    estadoActual.hijos.add(estadoSig);
+                    estadoSig.columna = i;
+                    estadoActual.valor = Math.max(estadoActual.valor, construirArbolMiniMax(estadoActual, profundidadActual + 1));
                 }
             }
-        }
-        if (esCapaMAX(capa)) {//Devolver a la capa superior
-            return alpha;//alfa si es capaMAX
+            return estadoActual.valor;
         } else {
-            return beta;//beta si es capaMIN
+            for (int i = 0; i < COLUMNAS; i++) {
+                if (!estadoActual.tablero.fullColumn(i)) {
+                    Tablero tableroAux = new Tablero(estadoActual.tablero);
+                    tableroAux.setButton(i, estadoActual.alternarJugador());
+                    Estado estadoSig = new Estado(tableroAux, estadoActual.alternarJugador(), profundidadActual + 1);
+                    switch (estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA)) {
+                        case Conecta.JUGADOR2:
+                            estadoActual.valor = Integer.MAX_VALUE;
+                            break;
+                        case Conecta.JUGADOR1:
+                            estadoActual.valor = Integer.MIN_VALUE;
+                            break;
+                    }
+                    estadoActual.hijos.add(estadoSig);
+                    estadoSig.columna = i;
+                    estadoActual.valor = Math.min(estadoActual.valor, construirArbolMiniMax(estadoActual, profundidadActual + 1));
+                }
+            }
+            return estadoActual.valor;
         }
-    }
-
-    public boolean esCapaMIN(int capa) {//Si es una capa impar,es capaMIN
-        return ((capa % 2) == 1);
-    }
-
-    public boolean esCapaMAX(int capa) { //Si es una capa par,es capaMAX
-        return ((capa % 2) == 0);
-    }
-
-    public int maximo(int v1, int v2) {
-        if (v1 > v2) {
-            return (v1);
-        } else {
-            return (v2);
-        }
-    }
-
-    public int minimo(int v1, int v2) {
-        if (v1 < v2) {
-            return (v1);
-        } else {
-            return (v2);
-        }
-    }
-
-    public int valoracion(Tablero tablero, int jugador) {
-        return ((int) (java.lang.Math.round(_pesos[0] * ponderacion(tablero))
-                + java.lang.Math.round(_pesos[1] * parejas(tablero))
-                + java.lang.Math.round(_pesos[2] * trios(tablero))));
     }
 
     private int ponderacion(Tablero tablero) {
@@ -233,8 +195,71 @@ public class IAPlayer extends Player {
         return (mias - suyas);//Devolver el valor de la jugada
     }
 
-    private int parejas(Tablero tablero) {
-        // Evaluacion de los pares de fichas adyacentes
+    public int cuatroEnRaya(Tablero tablero) {
+        int[][] m_tablero = tablero.boton_int;
+        int i = FILAS - 1;
+        int j;
+        boolean encontrado = false;
+        int jugador = 0;
+        int casilla;
+        while (!encontrado && i >= 0) {
+            j = COLUMNAS - 1;
+            while (!encontrado && j >= 0) {
+                casilla = m_tablero[i][j];
+                if (casilla != 0) {
+                    // Busqueda horizontal
+                    if (j - 3 >= 0) {
+                        if (m_tablero[i][j - 1] == casilla
+                                && m_tablero[i][j - 2] == casilla
+                                && m_tablero[i][j - 3] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        }
+                    }
+                    // Busqueda vertical
+                    if (i + 3 < FILAS) {
+                        if (m_tablero[i + 1][j] == casilla
+                                && m_tablero[i + 2][j] == casilla
+                                && m_tablero[i + 3][j] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        } else {
+                            // Busqueda diagonal 1
+                            if (j - 3 >= 0) {
+                                if (m_tablero[i + 1][j - 1] == casilla
+                                        && m_tablero[i + 2][j - 2] == casilla
+                                        && m_tablero[i + 3][j - 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                            // Busqueda diagonal 2
+                            if (j + 3 < COLUMNAS) {
+                                if (m_tablero[i + 1][j + 1] == casilla
+                                        && m_tablero[i + 2][j + 2] == casilla
+                                        && m_tablero[i + 3][j + 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                        }
+                    }
+                }
+                j = j - 1;
+            }
+            i = i - 1;
+        }
+        return jugador;
+    }
+
+    /**
+     * Comprueba la cantidad de trios propios que existen en el tablero
+     *
+     * @param tablero tablero del que se quieren comprobar los trios
+     * @return Pair que contine los trios del jugador como clave y los del
+     * enemigo como valor
+     */
+    private Pair<Integer, Integer> trios(Tablero tablero) {
 
         int mias = 0; // num de pare de casillas del jugador
         int suyas = 0;
@@ -502,28 +527,28 @@ public class IAPlayer extends Player {
          *
          * @param tablero Dato que alberga el Estado
          */
-        public Estado(int[][] tablero, int jugador, int nivel) {
+        public Estado(int[][] tablero,int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = new Tablero(tablero);
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
             this.hayGanador = false;
-            if (jugador == Conecta.JUGADOR1) {
+            if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
                 this.valor = Integer.MIN_VALUE;
             }
         }
 
-        public Estado(Tablero tablero, int jugador, int nivel) {
+        public Estado(Tablero tablero,int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = tablero.clone();
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
             this.hayGanador = false;
-            if (jugador == Conecta.JUGADOR1) {
+            if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
                 this.valor = Integer.MIN_VALUE;
@@ -598,6 +623,26 @@ public class IAPlayer extends Player {
             // Si y < 0, columna completa
             return (y < 0);
 
+        }
+
+        public boolean tableroLleno() {
+            boolean lleno = true;
+            int i = 0;
+            int j;
+
+            while (lleno && i < FILAS) {
+                j = 0;
+                while (lleno && j < COLUMNAS) {
+                    if (boton_int[i][j] == 0) {
+                        lleno = false;
+                    } else {
+                        j = j + 1;
+                    }
+                }
+                i = i + 1;
+            }
+
+            return lleno;
         }
 
         @Override
@@ -824,15 +869,12 @@ public class IAPlayer extends Player {
             // Si la columna no está llena, colocar la ficha
             if (y >= 0) {
                 switch (jugador) {
-                    case Conecta.JUGADOR1:
+                    case Conecta.JUGADOR1 ->
                         this.boton_int[y][col] = 1;
-                        break;
-                    case Conecta.JUGADOR2:
+                    case Conecta.JUGADOR2 ->
                         this.boton_int[y][col] = -1;
-                        break;
-                    case Conecta.JUGADOR0:
+                    case Conecta.JUGADOR0 ->
                         this.boton_int[y][col] = 2;
-                        break;
                 } // switch
             } // if
 
@@ -842,4 +884,27 @@ public class IAPlayer extends Player {
 
     }
 
+    public class Pair<K extends Object, V extends Object> {
+
+        private final K key;
+        private final V value;
+
+        public Pair(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Pair{" + "key=" + key + ", value=" + value + '}';
+        }
+    }
 }

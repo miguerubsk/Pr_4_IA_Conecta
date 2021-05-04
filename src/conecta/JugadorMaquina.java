@@ -63,28 +63,26 @@ public class JugadorMaquina extends Player {
         return (m_columna);//Devolver la mejor columna
 
     }
-    
-    public boolean tableroLleno(Grid tablero)
-	{
-		boolean lleno = true;
-		int i = 0;
-		int j;
-		
-		while (lleno && i<tablero.getFilas())
-		{
-			j = 0;
-			while (lleno && j<tablero.getColumnas())
-			{
-				if (tablero.getButton(i,j) == 0)
-					lleno = false;
-				else
-					j = j + 1;
-			}
-			i = i + 1;
-		}
-			
-	    return lleno;
-	}
+
+    public boolean tableroLleno(Grid tablero) {
+        boolean lleno = true;
+        int i = 0;
+        int j;
+
+        while (lleno && i < tablero.getFilas()) {
+            j = 0;
+            while (lleno && j < tablero.getColumnas()) {
+                if (tablero.getButton(i, j) == 0) {
+                    lleno = false;
+                } else {
+                    j = j + 1;
+                }
+            }
+            i = i + 1;
+        }
+
+        return lleno;
+    }
 
     public int AlfaBeta(Grid tablero, int jugador, int capa) {
 
@@ -351,78 +349,65 @@ public class JugadorMaquina extends Player {
 
         return (mias - suyas);
     }
-    
-    public int cuatroEnRaya(Grid tablero){
+
+    public int cuatroEnRaya(Grid tablero) {
         int m_numFilas = tablero.getFilas();
         int m_numColumnas = tablero.getColumnas();
         int[][] m_tablero = tablero.toArray();
-		int i = m_numFilas - 1;
-		int j;
-		boolean encontrado = false;
-		int jugador = 0;
-		int casilla;
-		while (!encontrado && i >= 0)
-		{
-			j = m_numColumnas - 1;
-			while (!encontrado && j >= 0)
-			{
-				casilla = m_tablero[i][j];
-				if (casilla != 0)
-				{	
-					// Busqueda horizontal
-					if (j - 3 >= 0)
-					{   
-						if (m_tablero[i][j-1] == casilla &&
-						    m_tablero[i][j-2] == casilla &&
-							m_tablero[i][j-3] == casilla)
-							{
-								encontrado = true;
-								jugador = casilla;
-							}
-					}
-					// Busqueda vertical
-				    if (i + 3 < m_numFilas)
-				    {	
-				    	if (m_tablero[i+1][j] == casilla &&
-				    		m_tablero[i+2][j] == casilla &&
-							m_tablero[i+3][j] == casilla)
-							{
-				    			encontrado = true;
-				    			jugador = casilla;
-				    		}
-				    	else
-				    	{	
-				    		// Busqueda diagonal 1
-				    		if (j - 3 >= 0)
-				    		{
-				    			if (m_tablero[i+1][j-1] == casilla &&
-				    			    m_tablero[i+2][j-2] == casilla &&
-									m_tablero[i+3][j-3] == casilla)
-									{
-				    					encontrado = true;
-				    					jugador = casilla;
-				    				}
-				    		}
-				    		// Busqueda diagonal 2
-				    		if (j + 3 < m_numColumnas)
-				    		{
-				    			if (m_tablero[i+1][j+1] == casilla &&
-				    			    m_tablero[i+2][j+2] == casilla &&
-									m_tablero[i+3][j+3] == casilla)
-									{
-				    					encontrado = true;
-				    					jugador = casilla;
-				    				}
-				    		}
-				    	}
-				    }			
-				}
-				j = j - 1;
-			}
-			i = i - 1;
-		}		
-		return jugador;
-	}
+        int i = m_numFilas - 1;
+        int j;
+        boolean encontrado = false;
+        int jugador = 0;
+        int casilla;
+        while (!encontrado && i >= 0) {
+            j = m_numColumnas - 1;
+            while (!encontrado && j >= 0) {
+                casilla = m_tablero[i][j];
+                if (casilla != 0) {
+                    // Busqueda horizontal
+                    if (j - 3 >= 0) {
+                        if (m_tablero[i][j - 1] == casilla
+                                && m_tablero[i][j - 2] == casilla
+                                && m_tablero[i][j - 3] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        }
+                    }
+                    // Busqueda vertical
+                    if (i + 3 < m_numFilas) {
+                        if (m_tablero[i + 1][j] == casilla
+                                && m_tablero[i + 2][j] == casilla
+                                && m_tablero[i + 3][j] == casilla) {
+                            encontrado = true;
+                            jugador = casilla;
+                        } else {
+                            // Busqueda diagonal 1
+                            if (j - 3 >= 0) {
+                                if (m_tablero[i + 1][j - 1] == casilla
+                                        && m_tablero[i + 2][j - 2] == casilla
+                                        && m_tablero[i + 3][j - 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                            // Busqueda diagonal 2
+                            if (j + 3 < m_numColumnas) {
+                                if (m_tablero[i + 1][j + 1] == casilla
+                                        && m_tablero[i + 2][j + 2] == casilla
+                                        && m_tablero[i + 3][j + 3] == casilla) {
+                                    encontrado = true;
+                                    jugador = casilla;
+                                }
+                            }
+                        }
+                    }
+                }
+                j = j - 1;
+            }
+            i = i - 1;
+        }
+        return jugador;
+    }
 
     /**
      * A partir del tablero fboard obtiene la mejor jugada, determinando la
@@ -450,5 +435,5 @@ public class JugadorMaquina extends Player {
         m_columna = columnaCopia;
         return tablero.checkWin(tablero.setButton(m_columna, Conecta.JUGADOR2), m_columna, conecta);
     }
-    
+
 }
