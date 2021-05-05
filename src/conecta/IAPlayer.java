@@ -40,9 +40,6 @@ public class IAPlayer extends Player {
     private static final int FILAS = 6;
     private static final int CONECTA = 4;
     private static final int PROFUNDIDAD_MAX = 7;
-
-    private int alpha;
-    private int beta;
     
     private int[][] tableroAnterior;
     private boolean primeraJugada = true;
@@ -65,9 +62,6 @@ public class IAPlayer extends Player {
             primeraJugada = false;
         }
         int[][] tableroActual = tablero.toArray();
-        // Renovamos los valores cada vez que se llama al metodo
-        alpha = Integer.MIN_VALUE;
-        beta = Integer.MAX_VALUE;
 
         // ...
         // Calcular la mejor columna posible donde hacer nuestra jugada
@@ -86,7 +80,7 @@ public class IAPlayer extends Player {
             }
         }
 
-        minimax(estadoActual, 1, jugada);
+        minimaxAlphaBeta(estadoActual, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, jugada);
 
         for (Estado e : estadoActual.hijos) {
             if (estadoActual.valor == e.valor) {
@@ -101,8 +95,8 @@ public class IAPlayer extends Player {
 
     }
 
-    private long minimax(Estado estadoActual, int profundidadActual, Pair<Integer, Integer> ultimaJugada) {
-        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
+    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual,int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
+        if (profundidadActual >= PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
             return ponderarTablero(estadoActual.tablero, ultimaJugada);
         }
 
@@ -113,9 +107,15 @@ public class IAPlayer extends Player {
                 estadoActual.hijos.add(estadoSig);
                 estadoSig.columna = i;
                 if (estadoActual.jugador == Conecta.JUGADOR2) {
-                    estadoActual.valor = Math.min(minimax(estadoSig, profundidadActual + 1, jugada), estadoActual.valor);
+                    estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
+                    beta = Math.min(beta, estadoActual.valor);
+                    if(beta <= alpha)
+                        return estadoActual.valor;
                 } else {
-                    estadoActual.valor = Math.max(minimax(estadoSig, profundidadActual + 1, jugada), estadoActual.valor);
+                    estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
+                    alpha = Math.max(alpha, estadoActual.valor);
+                    if(alpha >= beta)
+                        return estadoActual.valor;
                 }
             }
         }
@@ -125,10 +125,12 @@ public class IAPlayer extends Player {
     private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
-            case Conecta.JUGADOR2:
+            case Conecta.JUGADOR2 -> {
                 return Integer.MAX_VALUE;
-            case Conecta.JUGADOR1:
+            }
+            case Conecta.JUGADOR1 -> {
                 return Integer.MIN_VALUE;
+            }
         }
 
         Pair<Integer, Integer> trios = trios(tablero);
@@ -214,7 +216,7 @@ public class IAPlayer extends Player {
                 }
             }
         }
-        return new Pair<Integer, Integer>(mias, suyas);
+        return new Pair<>(mias, suyas);
     }
 
     /**
@@ -290,7 +292,7 @@ public class IAPlayer extends Player {
             }
         }
 
-        return new Pair<Integer, Integer>(mias, suyas);
+        return new Pair<>(mias, suyas);
     }
 
     public static void print(Estado root) {
@@ -301,10 +303,9 @@ public class IAPlayer extends Player {
             while (!cola_nivel.isEmpty()) {
                 Estado temp = cola_nivel.remove();
                 System.out.println(temp.toString());
-                for (Estado n : temp.hijos) {
+                temp.hijos.forEach(n -> {
                     cola_nivel.add(n);
-
-                }
+                });
             }
         }
     }
@@ -325,13 +326,12 @@ public class IAPlayer extends Player {
          * Indica si el estado actual es estado final. Es estado final si es
          * solución o si es nodo hoja.
          */
-        private boolean estadoFinal, hayGanador;
+        private boolean estadoFinal;
 
         /**
          * Indica el valor heurístico del estado
          */
-        private long valor;
-        private int nivel, columna;
+        private int valor, nivel, columna;
 
         /**
          * Jugador que le toca jugar este estado.
@@ -341,7 +341,9 @@ public class IAPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero Dato que alberga el Estado
+         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param jugador jugador que está jugando el estado
+         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
          */
         public Estado(int[][] tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -349,7 +351,6 @@ public class IAPlayer extends Player {
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
-            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -357,13 +358,19 @@ public class IAPlayer extends Player {
             }
         }
 
+        /**
+         * Constructor parametrizado.
+         *
+         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param jugador jugador que está jugando el estado
+         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         */
         public Estado(Tablero tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = tablero.clone();
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
-            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -371,14 +378,10 @@ public class IAPlayer extends Player {
             }
         }
 
-        private void setEstadoFinal() {
-            this.estadoFinal = true;
-        }
-
-        private void setHayGanador() {
-            this.estadoFinal = true;
-        }
-
+        /**
+         * 
+         * @return el jugador contrario al que juega este estado
+         */
         private int alternarJugador() {
             if (this.jugador == Conecta.JUGADOR1) {
                 return Conecta.JUGADOR2;
