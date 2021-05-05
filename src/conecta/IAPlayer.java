@@ -67,7 +67,7 @@ public class IAPlayer extends Player {
         // Calcular la mejor columna posible donde hacer nuestra jugada
         //Pintar Ficha (sustituir 'columna' por el valor adecuado)
         //Pintar Ficha
-        int columna = getRandomColumn(tablero);
+        int columna = 0;
 
         Estado estadoActual = new Estado(tableroActual, Conecta.JUGADOR1, 1);
         
@@ -108,14 +108,14 @@ public class IAPlayer extends Player {
                 estadoSig.columna = i;
                 if (estadoActual.jugador == Conecta.JUGADOR2) {
                     estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-                    beta = Math.min(beta, estadoActual.valor);
-                    if(beta <= alpha)
-                        return estadoActual.valor;
+//                    beta = Math.min(beta, estadoActual.valor);
+//                    if(beta <= alpha)
+//                        return estadoActual.valor;
                 } else {
                     estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-                    alpha = Math.max(alpha, estadoActual.valor);
-                    if(alpha >= beta)
-                        return estadoActual.valor;
+//                    alpha = Math.max(alpha, estadoActual.valor);
+//                    if(alpha >= beta)
+//                        return estadoActual.valor;
                 }
             }
         }
