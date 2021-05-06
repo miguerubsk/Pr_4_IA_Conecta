@@ -51,7 +51,7 @@ public class IAPlayer extends Player {
     /**
      * Profundidad máxima a la que se descenderá en el árbol
      */
-    private static final int PROFUNDIDAD_MAX = 7;
+    private static final int PROFUNDIDAD_MAX = 9;
 
     /**
      * Contiene el tablero tal cual era antes de la jugada del enemigo
@@ -116,7 +116,7 @@ public class IAPlayer extends Player {
     }
 
     private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
-        if (profundidadActual >= PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
+        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
             estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
             return estadoActual.valor;
         }
