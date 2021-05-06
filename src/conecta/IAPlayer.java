@@ -36,12 +36,30 @@ import java.util.Queue;
  */
 public class IAPlayer extends Player {
 
+    /**
+     * Número de columnas del tablero
+     */
     private static final int COLUMNAS = 7;
+    /**
+     * Número de filas del tablero
+     */
     private static final int FILAS = 6;
+    /**
+     * Número de fichas consecutivas necesarias para ganar
+     */
     private static final int CONECTA = 4;
+    /**
+     * Profundidad máxima a la que se descenderá en el árbol
+     */
     private static final int PROFUNDIDAD_MAX = 7;
-    
+
+    /**
+     * Contiene el tablero tal cual era antes de la jugada del enemigo
+     */
     private int[][] tableroAnterior;
+    /**
+     * Indica si es la primera vez que se juega
+     */
     private boolean primeraJugada = true;
 
     /**
@@ -52,10 +70,10 @@ public class IAPlayer extends Player {
      */
     @Override
     public int jugada(Grid tablero, int conecta) {
-        if(primeraJugada){
+        if (primeraJugada) {
             tableroAnterior = new int[FILAS][COLUMNAS];
-            for(int i = 0; i < COLUMNAS; i++){
-                for(int j = 0; j < FILAS; j++){
+            for (int i = 0; i < COLUMNAS; i++) {
+                for (int j = 0; j < FILAS; j++) {
                     tableroAnterior[j][i] = 0;
                 }
             }
@@ -70,13 +88,14 @@ public class IAPlayer extends Player {
         int columna = 0;
 
         Estado estadoActual = new Estado(tableroActual, Conecta.JUGADOR1, 1);
-        
+
         Pair<Integer, Integer> jugada = null;
-        
-        for(int i = 0; i < FILAS; i++){
-            for(int j = 0; j < COLUMNAS; j++){
-                if(tableroActual[i][j] != tableroAnterior[i][j])
+
+        for (int i = 0; i < FILAS; i++) {
+            for (int j = 0; j < COLUMNAS; j++) {
+                if (tableroActual[i][j] != tableroAnterior[i][j]) {
                     jugada = new Pair<>(i, j);
+                }
             }
         }
 
@@ -85,6 +104,7 @@ public class IAPlayer extends Player {
         for (Estado e : estadoActual.hijos) {
             if (estadoActual.valor == e.valor) {
                 columna = e.columna;
+                break;
             }
         }
 
@@ -95,9 +115,10 @@ public class IAPlayer extends Player {
 
     }
 
-    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual,int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
+    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
         if (profundidadActual >= PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
-            return ponderarTablero(estadoActual.tablero, ultimaJugada);
+            estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
+            return estadoActual.valor;
         }
 
         for (int i = 0; i < COLUMNAS; i++) {
@@ -108,14 +129,14 @@ public class IAPlayer extends Player {
                 estadoSig.columna = i;
                 if (estadoActual.jugador == Conecta.JUGADOR2) {
                     estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-//                    beta = Math.min(beta, estadoActual.valor);
-//                    if(beta <= alpha)
-//                        return estadoActual.valor;
+                    beta = Math.min(beta, estadoActual.valor);
+                    if(beta <= alpha)
+                        return estadoActual.valor;
                 } else {
                     estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-//                    alpha = Math.max(alpha, estadoActual.valor);
-//                    if(alpha >= beta)
-//                        return estadoActual.valor;
+                    alpha = Math.max(alpha, estadoActual.valor);
+                    if(alpha >= beta)
+                        return estadoActual.valor;
                 }
             }
         }
@@ -126,10 +147,10 @@ public class IAPlayer extends Player {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
             case Conecta.JUGADOR2 -> {
-                return Integer.MAX_VALUE;
+                return Integer.MAX_VALUE - 1;
             }
             case Conecta.JUGADOR1 -> {
-                return Integer.MIN_VALUE;
+                return Integer.MIN_VALUE + 1;
             }
         }
 
@@ -341,9 +362,11 @@ public class IAPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param tablero contiene el tablero con la jugada hecha por el jugador
+         * que lo está jugando
          * @param jugador jugador que está jugando el estado
-         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         * @param nivel nivel en que se encuentra el estado en el árbol de
+         * jugadas
          */
         public Estado(int[][] tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -361,9 +384,11 @@ public class IAPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param tablero contiene el tablero con la jugada hecha por el jugador
+         * que lo está jugando
          * @param jugador jugador que está jugando el estado
-         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         * @param nivel nivel en que se encuentra el estado en el árbol de
+         * jugadas
          */
         public Estado(Tablero tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -379,7 +404,7 @@ public class IAPlayer extends Player {
         }
 
         /**
-         * 
+         *
          * @return el jugador contrario al que juega este estado
          */
         private int alternarJugador() {
