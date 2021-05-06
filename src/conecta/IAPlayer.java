@@ -471,8 +471,8 @@ public class IAPlayer extends Player {
 
         public boolean tableroLleno() {
 
-            for (int i = 0; i < COLUMNAS; i++) {
-                for (int j = 0; j < FILAS; j++) {
+            for (int i = 0; i < FILAS; i++) {
+                for (int j = 0; j < COLUMNAS; j++) {
                     if (boton_int[i][j] != 0) {
                         return false;
                     }
