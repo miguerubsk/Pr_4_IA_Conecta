@@ -112,9 +112,7 @@ public class IAPlayer extends Player {
         int fila = tablero.setButton(columna, Conecta.JUGADOR2);
         tableroAnterior = new int[FILAS][COLUMNAS];
         for (int i = 0; i < FILAS; i++) {
-            for (int j = 0; j < COLUMNAS; j++) {
-                tableroAnterior[i][j] = tablero.toArray()[i][j];
-            }
+            System.arraycopy(tablero.toArray()[i], 0, tableroAnterior[i], 0, COLUMNAS);
         }
 //        print(estadoActual); //Descomentar para mostrar por consola el árbol de jugadas por niveles
         return tablero.checkWin(fila, columna, conecta);
@@ -436,23 +434,19 @@ public class IAPlayer extends Player {
 
     public class Tablero {
 
-        private int[][] boton_int;
+        private final int[][] boton_int;
 
         public Tablero(int[][] tablero) {
             this.boton_int = new int[FILAS][COLUMNAS];
             for (int i = 0; i < FILAS; i++) {
-                for (int j = 0; j < COLUMNAS; j++) {
-                    this.boton_int[i][j] = tablero[i][j];
-                }
+                System.arraycopy(tablero[i], 0, this.boton_int[i], 0, COLUMNAS);
             }
         }
 
         public Tablero(Tablero tablero) {
             this.boton_int = new int[FILAS][COLUMNAS];
             for (int i = 0; i < FILAS; i++) {
-                for (int j = 0; j < COLUMNAS; j++) {
-                    this.boton_int[i][j] = tablero.boton_int[i][j];
-                }
+                System.arraycopy(tablero.boton_int[i], 0, this.boton_int[i], 0, COLUMNAS);
             }
         }
 
@@ -713,13 +707,13 @@ public class IAPlayer extends Player {
             if (y >= 0) {
                 switch (jugador) {
                     case Conecta.JUGADOR1:
-                        this.boton_int[y][col] = 1;
+                        this.boton_int[y][col] = Conecta.JUGADOR1;
                         break;
                     case Conecta.JUGADOR2:
-                        this.boton_int[y][col] = -1;
+                        this.boton_int[y][col] = Conecta.JUGADOR2;
                         break;
                     case Conecta.JUGADOR0:
-                        this.boton_int[y][col] = 2;
+                        this.boton_int[y][col] = Conecta.JUGADOR0;
                         break;
                 } // switch
             } // if
@@ -732,8 +726,8 @@ public class IAPlayer extends Player {
 
     public class Pair<K extends Object, V extends Object> {
 
-        private K key;
-        private V value;
+        private final K key;
+        private final V value;
 
         public Pair(K key, V value) {
             this.key = key;
