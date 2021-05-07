@@ -125,12 +125,10 @@ public class RandomPlayer extends Player {
     private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
-            case Conecta.JUGADOR2 -> {
+            case Conecta.JUGADOR2:
                 return Integer.MAX_VALUE;
-            }
-            case Conecta.JUGADOR1 -> {
+            case Conecta.JUGADOR1:
                 return Integer.MIN_VALUE;
-            }
         }
 
         Pair<Integer, Integer> trios = trios(tablero);
