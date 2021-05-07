@@ -95,6 +95,7 @@ public class IAPlayer extends Player {
             for (int j = 0; j < COLUMNAS; j++) {
                 if (tableroActual[i][j] != tableroAnterior[i][j]) {
                     jugada = new Pair<>(i, j);
+                    break;
                 }
             }
         }
@@ -109,14 +110,19 @@ public class IAPlayer extends Player {
         }
 
         int fila = tablero.setButton(columna, Conecta.JUGADOR2);
-        tableroAnterior = tablero.toArray();
+        tableroAnterior = new int[FILAS][COLUMNAS];
+        for (int i = 0; i < FILAS; i++) {
+            for (int j = 0; j < COLUMNAS; j++) {
+                tableroAnterior[i][j] = tablero.toArray()[i][j];
+            }
+        }
 //        print(estadoActual);
         return tablero.checkWin(fila, columna, conecta);
 
     }
 
     private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
-        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
+        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno() || estadoActual.tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA) != 0) {
             estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
             return estadoActual.valor;
         }
