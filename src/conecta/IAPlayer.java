@@ -51,7 +51,7 @@ public class IAPlayer extends Player {
     /**
      * Profundidad máxima a la que se descenderá en el árbol
      */
-    private static final int PROFUNDIDAD_MAX = 9;
+    private static final int PROFUNDIDAD_MAX = 10;
 
     /**
      * Contiene el tablero tal cual era antes de la jugada del enemigo
@@ -116,7 +116,7 @@ public class IAPlayer extends Player {
                 tableroAnterior[i][j] = tablero.toArray()[i][j];
             }
         }
-//        print(estadoActual);
+//        print(estadoActual); //Descomentar para mostrar por consola el árbol de jugadas por niveles
         return tablero.checkWin(fila, columna, conecta);
 
     }
@@ -136,13 +136,15 @@ public class IAPlayer extends Player {
                 if (estadoActual.jugador == Conecta.JUGADOR2) {
                     estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
                     beta = Math.min(beta, estadoActual.valor);
-                    if(beta <= alpha)
+                    if (beta <= alpha) {
                         return estadoActual.valor;
+                    }
                 } else {
                     estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
                     alpha = Math.max(alpha, estadoActual.valor);
-                    if(alpha >= beta)
+                    if (alpha >= beta) {
                         return estadoActual.valor;
+                    }
                 }
             }
         }
@@ -152,12 +154,10 @@ public class IAPlayer extends Player {
     private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
-            case Conecta.JUGADOR2 -> {
+            case Conecta.JUGADOR2:
                 return Integer.MAX_VALUE - 1;
-            }
-            case Conecta.JUGADOR1 -> {
+            case Conecta.JUGADOR1:
                 return Integer.MIN_VALUE + 1;
-            }
         }
 
         Pair<Integer, Integer> trios = trios(tablero);
