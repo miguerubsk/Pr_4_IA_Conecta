@@ -65,7 +65,7 @@ public class IAPlayer extends Player {
 
         Estado estadoActual = new Estado(tablero.toArray(), Conecta.JUGADOR1, 1);
 
-        construirArbolMiniMax(estadoActual, 1);
+        miniMax(estadoActual, 1);
 
         for (Estado e : estadoActual.hijos) {
             if (estadoActual.valor == e.valor) {
@@ -78,7 +78,7 @@ public class IAPlayer extends Player {
 
     }
 
-    private void construirArbolMiniMax(Estado estadoActual, int profundidadActual) {
+    private void miniMax(Estado estadoActual, int profundidadActual) {
         if (!estadoActual.estadoFinal && profundidadActual <= PROFUNDIDAD_MAX) {
             for (int i = 0; i < COLUMNAS; i++) {
                 if (!estadoActual.tablero.fullColumn(i)) {
@@ -100,7 +100,7 @@ public class IAPlayer extends Player {
                             break;
                         default:
                             estadoActual.hijos.add(estadoSig);
-                            construirArbolMiniMax(estadoSig, profundidadActual + 1);
+                            miniMax(estadoSig, profundidadActual + 1);
                             break;
                     }
                 }
@@ -337,12 +337,27 @@ public class IAPlayer extends Player {
          * Indica si el estado actual es estado final. Es estado final si es
          * solución o si es nodo hoja.
          */
-        private boolean estadoFinal, hayGanador;
+        private boolean estadoFinal;
+        
+        /**
+         * Indica si hay algún ganador.
+         */
+        private boolean hayGanador;
 
         /**
-         * Indica el valor heurístico del estado
+         * Indica el valor de utilidad/heurístico del nodo
          */
-        private int valor, nivel, columna;
+        private int valor;
+        
+        /**
+         * Indica el nivel del árbol de juego en el que se encuentra el nodo 
+         */
+        private int nivel;
+        
+        /**
+         * Indica la columna en la que se deja caer la nueva ficha que define el estado nuevo
+         */
+        private int columna;
 
         /**
          * Jugador que le toca jugar este estado.
@@ -382,15 +397,15 @@ public class IAPlayer extends Player {
             }
         }
 
-        private void setEstadoFinal() {
+        public void setEstadoFinal() {
             this.estadoFinal = true;
         }
 
-        private void setHayGanador() {
+        public void setHayGanador() {
             this.estadoFinal = true;
         }
 
-        private int alternarJugador() {
+        public int alternarJugador() {
             if (this.jugador == Conecta.JUGADOR1) {
                 return Conecta.JUGADOR2;
             } else {
