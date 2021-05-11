@@ -36,12 +36,30 @@ import java.util.Queue;
  */
 public class RandomPlayer extends Player {
 
+    /**
+     * Número de columnas del tablero
+     */
     private static final int COLUMNAS = 7;
+    /**
+     * Número de filas del tablero
+     */
     private static final int FILAS = 6;
+    /**
+     * Número de fichas consecutivas necesarias para ganar
+     */
     private static final int CONECTA = 4;
-    private static final int PROFUNDIDAD_MAX = 7;
-    
+    /**
+     * Profundidad máxima a la que se descenderá en el árbol
+     */
+    private static final int PROFUNDIDAD_MAX = 11;
+
+    /**
+     * Contiene el tablero tal cual era antes de la jugada del enemigo
+     */
     private int[][] tableroAnterior;
+    /**
+     * Indica si es la primera vez que se juega
+     */
     private boolean primeraJugada = true;
 
     /**
@@ -52,10 +70,10 @@ public class RandomPlayer extends Player {
      */
     @Override
     public int jugada(Grid tablero, int conecta) {
-        if(primeraJugada){
+        if (primeraJugada) {
             tableroAnterior = new int[FILAS][COLUMNAS];
-            for(int i = 0; i < COLUMNAS; i++){
-                for(int j = 0; j < FILAS; j++){
+            for (int i = 0; i < COLUMNAS; i++) {
+                for (int j = 0; j < FILAS; j++) {
                     tableroAnterior[j][i] = 0;
                 }
             }
@@ -67,16 +85,18 @@ public class RandomPlayer extends Player {
         // Calcular la mejor columna posible donde hacer nuestra jugada
         //Pintar Ficha (sustituir 'columna' por el valor adecuado)
         //Pintar Ficha
-        int columna = getRandomColumn(tablero);
+        int columna = 0;
 
         Estado estadoActual = new Estado(tableroActual, Conecta.JUGADOR1, 1);
-        
+
         Pair<Integer, Integer> jugada = null;
-        
-        for(int i = 0; i < FILAS; i++){
-            for(int j = 0; j < COLUMNAS; j++){
-                if(tableroActual[i][j] != tableroAnterior[i][j])
+
+        for (int i = 0; i < FILAS; i++) {
+            for (int j = 0; j < COLUMNAS; j++) {
+                if (tableroActual[i][j] != tableroAnterior[i][j]) {
                     jugada = new Pair<>(i, j);
+                    break;
+                }
             }
         }
 
@@ -85,19 +105,24 @@ public class RandomPlayer extends Player {
         for (Estado e : estadoActual.hijos) {
             if (estadoActual.valor == e.valor) {
                 columna = e.columna;
+                break;
             }
         }
 
         int fila = tablero.setButton(columna, Conecta.JUGADOR2);
-        tableroAnterior = tablero.toArray();
-//        print(estadoActual);
+        tableroAnterior = new int[FILAS][COLUMNAS];
+        for (int i = 0; i < FILAS; i++) {
+            System.arraycopy(tablero.toArray()[i], 0, tableroAnterior[i], 0, COLUMNAS);
+        }
+//        print(estadoActual); //Descomentar para mostrar por consola el árbol de jugadas por niveles
         return tablero.checkWin(fila, columna, conecta);
 
     }
 
-    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual,int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
-        if (profundidadActual >= PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
-            return ponderarTablero(estadoActual.tablero, ultimaJugada);
+    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
+        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno() || estadoActual.tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA) != 0) {
+            estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
+            return estadoActual.valor;
         }
 
         for (int i = 0; i < COLUMNAS; i++) {
@@ -108,14 +133,16 @@ public class RandomPlayer extends Player {
                 estadoSig.columna = i;
                 if (estadoActual.jugador == Conecta.JUGADOR2) {
                     estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-//                    beta = Math.min(beta, estadoActual.valor);
-//                    if(beta <= alpha)
-//                        return estadoActual.valor;
+                    beta = Math.min(beta, estadoActual.valor);
+                    if (beta <= alpha) {
+                        return estadoActual.valor;
+                    }
                 } else {
                     estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
-//                    alpha = Math.max(alpha, estadoActual.valor);
-//                    if(alpha >= beta)
-//                        return estadoActual.valor;
+                    alpha = Math.max(alpha, estadoActual.valor);
+                    if (alpha >= beta) {
+                        return estadoActual.valor;
+                    }
                 }
             }
         }
@@ -126,9 +153,9 @@ public class RandomPlayer extends Player {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
             case Conecta.JUGADOR2:
-                return Integer.MAX_VALUE;
+                return Integer.MAX_VALUE - 1;
             case Conecta.JUGADOR1:
-                return Integer.MIN_VALUE;
+                return Integer.MIN_VALUE + 1;
         }
 
         Pair<Integer, Integer> trios = trios(tablero);
@@ -339,9 +366,11 @@ public class RandomPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param tablero contiene el tablero con la jugada hecha por el jugador
+         * que lo está jugando
          * @param jugador jugador que está jugando el estado
-         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         * @param nivel nivel en que se encuentra el estado en el árbol de
+         * jugadas
          */
         public Estado(int[][] tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -359,9 +388,11 @@ public class RandomPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param tablero contiene el tablero con la jugada hecha por el jugador
+         * que lo está jugando
          * @param jugador jugador que está jugando el estado
-         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         * @param nivel nivel en que se encuentra el estado en el árbol de
+         * jugadas
          */
         public Estado(Tablero tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -377,7 +408,7 @@ public class RandomPlayer extends Player {
         }
 
         /**
-         * 
+         *
          * @return el jugador contrario al que juega este estado
          */
         private int alternarJugador() {
@@ -403,23 +434,19 @@ public class RandomPlayer extends Player {
 
     public class Tablero {
 
-        private int[][] boton_int;
+        private final int[][] boton_int;
 
         public Tablero(int[][] tablero) {
             this.boton_int = new int[FILAS][COLUMNAS];
             for (int i = 0; i < FILAS; i++) {
-                for (int j = 0; j < COLUMNAS; j++) {
-                    this.boton_int[i][j] = tablero[i][j];
-                }
+                System.arraycopy(tablero[i], 0, this.boton_int[i], 0, COLUMNAS);
             }
         }
 
         public Tablero(Tablero tablero) {
             this.boton_int = new int[FILAS][COLUMNAS];
             for (int i = 0; i < FILAS; i++) {
-                for (int j = 0; j < COLUMNAS; j++) {
-                    this.boton_int[i][j] = tablero.boton_int[i][j];
-                }
+                System.arraycopy(tablero.boton_int[i], 0, this.boton_int[i], 0, COLUMNAS);
             }
         }
 
@@ -444,8 +471,8 @@ public class RandomPlayer extends Player {
 
         public boolean tableroLleno() {
 
-            for (int i = 0; i < COLUMNAS; i++) {
-                for (int j = 0; j < FILAS; j++) {
+            for (int i = 0; i < FILAS; i++) {
+                for (int j = 0; j < COLUMNAS; j++) {
                     if (boton_int[i][j] != 0) {
                         return false;
                     }
@@ -680,13 +707,13 @@ public class RandomPlayer extends Player {
             if (y >= 0) {
                 switch (jugador) {
                     case Conecta.JUGADOR1:
-                        this.boton_int[y][col] = 1;
+                        this.boton_int[y][col] = Conecta.JUGADOR1;
                         break;
                     case Conecta.JUGADOR2:
-                        this.boton_int[y][col] = -1;
+                        this.boton_int[y][col] = Conecta.JUGADOR2;
                         break;
                     case Conecta.JUGADOR0:
-                        this.boton_int[y][col] = 2;
+                        this.boton_int[y][col] = Conecta.JUGADOR0;
                         break;
                 } // switch
             } // if
@@ -699,8 +726,8 @@ public class RandomPlayer extends Player {
 
     public class Pair<K extends Object, V extends Object> {
 
-        private K key;
-        private V value;
+        private final K key;
+        private final V value;
 
         public Pair(K key, V value) {
             this.key = key;
@@ -721,4 +748,9 @@ public class RandomPlayer extends Player {
         }
 
     }
+
+    public static int getPROFUNDIDAD_MAX() {
+        return PROFUNDIDAD_MAX;
+    }
+    
 }
