@@ -140,15 +140,15 @@ public class Conecta extends JFrame implements ActionListener {
                         finJuego(juego.checkWin(x, j, conecta));
 
                         // Añadiendo ruido, cada 5 jugadas
-                        if ((movimiento > 0) && (movimiento % 5 == 0)) {
-                            // Cara o cruz
-                            if (Math.random() < 0.5) {
-                                if (juego.setButton(player2.getRandomColumn(juego), Conecta.JUGADOR0) >= 0) {
-                                    //JOptionPane.showMessageDialog(this, "¡Oh, oh! ¡Ha aparecido una ficha obst\u00e1culo!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
-                                    movimiento++;
-                                }
-                            }
-                        }
+//                        if ((movimiento > 0) && (movimiento % 5 == 0)) {
+//                            // Cara o cruz
+//                            if (Math.random() < 0.5) {
+//                                if (juego.setButton(player2.getRandomColumn(juego), Conecta.JUGADOR0) >= 0) {
+//                                    //JOptionPane.showMessageDialog(this, "¡Oh, oh! ¡Ha aparecido una ficha obst\u00e1culo!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
+//                                    movimiento++;
+//                                }
+//                            }
+//                        }
                     } // En otro caso, la columna ya está completa
                 } // if
             } // for 2
@@ -238,7 +238,7 @@ public class Conecta extends JFrame implements ActionListener {
                 player2 = new IAPlayer();
                 System.out.println("CPU (IAPlayer)");
             } else {
-                player2 = new RandomPlayer();
+                player2 = new IAPlayer();
                 System.out.println("CPU (Modo aleatorio)");
             }
         } else {
@@ -261,7 +261,7 @@ public class Conecta extends JFrame implements ActionListener {
         if (alfabeta) {
             player2 = new IAPlayer();
         } else {
-            player2 = new RandomPlayer();
+            player2 = new IAPlayer();
         }
 
         //menu GUI
