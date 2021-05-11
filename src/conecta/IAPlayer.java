@@ -51,7 +51,7 @@ public class IAPlayer extends Player {
     /**
      * Profundidad máxima a la que se descenderá en el árbol
      */
-    private static final int PROFUNDIDAD_MAX = 10;
+    private static final int PROFUNDIDAD_MAX = 12;
 
     /**
      * Contiene el tablero tal cual era antes de la jugada del enemigo
@@ -748,4 +748,9 @@ public class IAPlayer extends Player {
         }
 
     }
+
+    public static int getPROFUNDIDAD_MAX() {
+        return PROFUNDIDAD_MAX;
+    }
+    
 }
