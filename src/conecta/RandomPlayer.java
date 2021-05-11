@@ -40,9 +40,9 @@ public class RandomPlayer extends Player {
     private static final int FILAS = 6;
     private static final int CONECTA = 4;
     private static final int PROFUNDIDAD_MAX = 7;
-
-    private int alpha;
-    private int beta;
+    
+    private int[][] tableroAnterior;
+    private boolean primeraJugada = true;
 
     /**
      *
@@ -52,10 +52,16 @@ public class RandomPlayer extends Player {
      */
     @Override
     public int jugada(Grid tablero, int conecta) {
-
-        // Renovamos los valores cada vez que se llama al metodo
-        alpha = Integer.MIN_VALUE;
-        beta = Integer.MAX_VALUE;
+        if(primeraJugada){
+            tableroAnterior = new int[FILAS][COLUMNAS];
+            for(int i = 0; i < COLUMNAS; i++){
+                for(int j = 0; j < FILAS; j++){
+                    tableroAnterior[j][i] = 0;
+                }
+            }
+            primeraJugada = false;
+        }
+        int[][] tableroActual = tablero.toArray();
 
         // ...
         // Calcular la mejor columna posible donde hacer nuestra jugada
@@ -63,9 +69,18 @@ public class RandomPlayer extends Player {
         //Pintar Ficha
         int columna = getRandomColumn(tablero);
 
-        Estado estadoActual = new Estado(tablero.toArray(), Conecta.JUGADOR1, 1);
+        Estado estadoActual = new Estado(tableroActual, Conecta.JUGADOR1, 1);
+        
+        Pair<Integer, Integer> jugada = null;
+        
+        for(int i = 0; i < FILAS; i++){
+            for(int j = 0; j < COLUMNAS; j++){
+                if(tableroActual[i][j] != tableroAnterior[i][j])
+                    jugada = new Pair<>(i, j);
+            }
+        }
 
-        construirArbolMiniMax(estadoActual, 1);
+        minimaxAlphaBeta(estadoActual, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, jugada);
 
         for (Estado e : estadoActual.hijos) {
             if (estadoActual.valor == e.valor) {
@@ -73,74 +88,49 @@ public class RandomPlayer extends Player {
             }
         }
 
+        int fila = tablero.setButton(columna, Conecta.JUGADOR2);
+        tableroAnterior = tablero.toArray();
 //        print(estadoActual);
-        return tablero.checkWin(tablero.setButton(columna, Conecta.JUGADOR2), columna, conecta);
+        return tablero.checkWin(fila, columna, conecta);
 
     }
 
-    private void construirArbolMiniMax(Estado estadoActual, int profundidadActual) {
-        if (!estadoActual.estadoFinal && profundidadActual <= PROFUNDIDAD_MAX) {
-            for (int i = 0; i < COLUMNAS; i++) {
-                if (!estadoActual.tablero.fullColumn(i)) {
-                    Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador(), profundidadActual + 1);
-                    estadoSig.columna = i;
-                    int ganador = estadoSig.tablero.checkWin(estadoSig.tablero.setButton(i, estadoSig.jugador), i, CONECTA);
-                    switch (ganador) {
-                        case Conecta.JUGADOR1:
-                            estadoSig.setEstadoFinal();
-                            estadoSig.setHayGanador();
-                            estadoSig.valor = Integer.MIN_VALUE;
-                            estadoActual.hijos.add(estadoSig);
-                            break;
-                        case Conecta.JUGADOR2:
-                            estadoSig.setEstadoFinal();
-                            estadoSig.setHayGanador();
-                            estadoSig.valor = Integer.MAX_VALUE;
-                            estadoActual.hijos.add(estadoSig);
-                            break;
-                        default:
-                            estadoActual.hijos.add(estadoSig);
-                            construirArbolMiniMax(estadoSig, profundidadActual + 1);
-                            break;
-                    }
-                }
-            }
-            if (estadoActual.hijos.isEmpty() && !estadoActual.estadoFinal) {
-                estadoActual.valor = 0;
-                estadoActual.setEstadoFinal();
-            }
-        }
-        if (profundidadActual == PROFUNDIDAD_MAX) {
-            estadoActual.setEstadoFinal();
+    private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual,int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
+        if (profundidadActual >= PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno()) {
+            return ponderarTablero(estadoActual.tablero, ultimaJugada);
         }
 
-        if (estadoActual.estadoFinal && !estadoActual.hayGanador) {
-            estadoActual.valor = ponderarTablero(estadoActual.tablero);
-        } else {
-            if (!estadoActual.hayGanador) {
-                switch (estadoActual.jugador) {
-                    case Conecta.JUGADOR2:
-                        for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor < estadoActual.valor) {
-                                estadoActual.valor = hijo.valor;
-                            }
-                        }
-                        break;
-                    case Conecta.JUGADOR1:
-                        for (Estado hijo : estadoActual.hijos) {
-                            if (hijo.valor > estadoActual.valor) {
-                                estadoActual.valor = hijo.valor;
-                            }
-                        }
-                        break;
+        for (int i = 0; i < COLUMNAS; i++) {
+            if (!estadoActual.tablero.fullColumn(i)) {
+                Estado estadoSig = new Estado(estadoActual.tablero, estadoActual.alternarJugador(), profundidadActual + 1);
+                Pair<Integer, Integer> jugada = new Pair<>(estadoSig.tablero.setButton(i, estadoSig.jugador), i);
+                estadoActual.hijos.add(estadoSig);
+                estadoSig.columna = i;
+                if (estadoActual.jugador == Conecta.JUGADOR2) {
+                    estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
+//                    beta = Math.min(beta, estadoActual.valor);
+//                    if(beta <= alpha)
+//                        return estadoActual.valor;
+                } else {
+                    estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
+//                    alpha = Math.max(alpha, estadoActual.valor);
+//                    if(alpha >= beta)
+//                        return estadoActual.valor;
                 }
             }
         }
-
-        estadoActual.tablero = null; //eliminamos el tablero para ahorrar memoria
+        return estadoActual.valor;
     }
 
-    private int ponderarTablero(Tablero tablero) {
+    private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
+
+        switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
+            case Conecta.JUGADOR2:
+                return Integer.MAX_VALUE;
+            case Conecta.JUGADOR1:
+                return Integer.MIN_VALUE;
+        }
+
         Pair<Integer, Integer> trios = trios(tablero);
         Pair<Integer, Integer> pares = pares(tablero);
         int yo = (trios.getKey() * 1000 + pares.getKey() * 100);
@@ -224,9 +214,7 @@ public class RandomPlayer extends Player {
                 }
             }
         }
-
-        Pair<Integer, Integer> par = new Pair<>(mias, suyas);
-        return par;
+        return new Pair<>(mias, suyas);
     }
 
     /**
@@ -302,8 +290,7 @@ public class RandomPlayer extends Player {
             }
         }
 
-        Pair<Integer, Integer> par = new Pair<>(mias, suyas);
-        return par;
+        return new Pair<>(mias, suyas);
     }
 
     public static void print(Estado root) {
@@ -314,9 +301,9 @@ public class RandomPlayer extends Player {
             while (!cola_nivel.isEmpty()) {
                 Estado temp = cola_nivel.remove();
                 System.out.println(temp.toString());
-                for (Estado n : temp.hijos) {
+                temp.hijos.forEach(n -> {
                     cola_nivel.add(n);
-                }
+                });
             }
         }
     }
@@ -337,7 +324,7 @@ public class RandomPlayer extends Player {
          * Indica si el estado actual es estado final. Es estado final si es
          * solución o si es nodo hoja.
          */
-        private boolean estadoFinal, hayGanador;
+        private boolean estadoFinal;
 
         /**
          * Indica el valor heurístico del estado
@@ -352,7 +339,9 @@ public class RandomPlayer extends Player {
         /**
          * Constructor parametrizado.
          *
-         * @param tablero Dato que alberga el Estado
+         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param jugador jugador que está jugando el estado
+         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
          */
         public Estado(int[][] tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
@@ -360,7 +349,6 @@ public class RandomPlayer extends Player {
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
-            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -368,13 +356,19 @@ public class RandomPlayer extends Player {
             }
         }
 
+        /**
+         * Constructor parametrizado.
+         *
+         * @param tablero contiene el tablero con la jugada hecha por el jugador que lo está jugando
+         * @param jugador jugador que está jugando el estado
+         * @param nivel nivel en que se encuentra el estado en el árbol de jugadas
+         */
         public Estado(Tablero tablero, int jugador, int nivel) {
             this.hijos = new ArrayList<>();
             this.tablero = tablero.clone();
             this.estadoFinal = false;
             this.jugador = jugador;
             this.nivel = nivel;
-            this.hayGanador = false;
             if (jugador == Conecta.JUGADOR2) {
                 this.valor = Integer.MAX_VALUE;
             } else {
@@ -382,14 +376,10 @@ public class RandomPlayer extends Player {
             }
         }
 
-        private void setEstadoFinal() {
-            this.estadoFinal = true;
-        }
-
-        private void setHayGanador() {
-            this.estadoFinal = true;
-        }
-
+        /**
+         * 
+         * @return el jugador contrario al que juega este estado
+         */
         private int alternarJugador() {
             if (this.jugador == Conecta.JUGADOR1) {
                 return Conecta.JUGADOR2;
@@ -450,6 +440,19 @@ public class RandomPlayer extends Player {
             // Si y < 0, columna completa
             return (y < 0);
 
+        }
+
+        public boolean tableroLleno() {
+
+            for (int i = 0; i < COLUMNAS; i++) {
+                for (int j = 0; j < FILAS; j++) {
+                    if (boton_int[i][j] != 0) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         @Override
