@@ -61,10 +61,10 @@ public class Conecta extends JFrame implements ActionListener {
     private final JMenuItem salir = new JMenuItem("Salir");
     private final JRadioButton p1h = new JRadioButton("Humano", true);
     private final JRadioButton p2h = new JRadioButton("Humano", false);
-    private final JRadioButton p2c = new JRadioButton("CPU (Aleatorio)", true);
-    private final JRadioButton p2c2 = new JRadioButton("CPU (IAPlayer)", false);
+    private final JRadioButton p2c = new JRadioButton("CPU (11 niveles)", true);
+    private final JRadioButton p2c2 = new JRadioButton("CPU (12 niveles)", false);
     // Leyendas y cabeceras
-    private String cabecera = "Pr\u00e1cticas de Inteligencia Artificial (Curso 2020-21)";
+    private String cabecera = "Jugador minimax con poda alfa-beta - Miguerubsk";
     private final JLabel nombre = new JLabel(cabecera, JLabel.CENTER);
     private final String title = "Conecta4";
 
@@ -238,7 +238,7 @@ public class Conecta extends JFrame implements ActionListener {
                 player2 = new IAPlayer();
                 System.out.println("CPU (IAPlayer)");
             } else {
-                player2 = new IAPlayer();
+                player2 = new RandomPlayer();
                 System.out.println("CPU (Modo aleatorio)");
             }
         } else {
@@ -261,7 +261,7 @@ public class Conecta extends JFrame implements ActionListener {
         if (alfabeta) {
             player2 = new IAPlayer();
         } else {
-            player2 = new IAPlayer();
+            player2 = new RandomPlayer();
         }
 
         //menu GUI
