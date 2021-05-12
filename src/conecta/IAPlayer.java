@@ -119,6 +119,15 @@ public class IAPlayer extends Player {
 
     }
 
+    /**
+     * algorimo minimax con poda alpha-beta
+     * @param estadoActual nodo raíz del árbol de jugadas
+     * @param profundidadActual profundidad por la que se va explorando
+     * @param alpha puntuación mínima asegurada para el jugador max (inicialmente −∞)
+     * @param beta puntuación máxima asegurada para el jugador min (inicialmente +∞)
+     * @param ultimaJugada última jugada que se realizó
+     * @return valor heurístico
+     */
     private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
         if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno() || estadoActual.tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA) != 0) {
             estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
@@ -131,13 +140,13 @@ public class IAPlayer extends Player {
                 Pair<Integer, Integer> jugada = new Pair<>(estadoSig.tablero.setButton(i, estadoSig.jugador), i);
                 estadoActual.hijos.add(estadoSig);
                 estadoSig.columna = i;
-                if (estadoActual.jugador == Conecta.JUGADOR2) {
+                if (estadoActual.jugador == Conecta.JUGADOR2) { //Si es jugador min
                     estadoActual.valor = Math.min(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
                     beta = Math.min(beta, estadoActual.valor);
                     if (beta <= alpha) {
                         return estadoActual.valor;
                     }
-                } else {
+                } else { //si es jugador max
                     estadoActual.valor = Math.max(minimaxAlphaBeta(estadoSig, profundidadActual + 1, alpha, beta, jugada), estadoActual.valor);
                     alpha = Math.max(alpha, estadoActual.valor);
                     if (alpha >= beta) {
@@ -149,6 +158,12 @@ public class IAPlayer extends Player {
         return estadoActual.valor;
     }
 
+    /**
+     * calcula el valor heurístico o de utilidad del tablero que se le pasa
+     * @param tablero tablero que se quiere calcular
+     * @param ultimaJugada fila y columna de la última jugada que se realizó sobre el tablero
+     * @return el valor heurístico o de utilidad
+     */
     private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
 
         switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
@@ -320,6 +335,10 @@ public class IAPlayer extends Player {
         return new Pair<>(mias, suyas);
     }
 
+    /**
+     * Imprime por pantalla un árbol por niveles
+     * @param root nodo raíz del árbol que se quiere mostrar
+     */
     public static void print(Estado root) {
         if (root != null) {
             Queue<Estado> cola_nivel = new LinkedList<>();
@@ -469,6 +488,10 @@ public class IAPlayer extends Player {
 
         }
 
+        /**
+         * comprueba si el tablero está lleno
+         * @return true si está lleno
+         */
         public boolean tableroLleno() {
 
             for (int i = 0; i < FILAS; i++) {
@@ -513,10 +536,22 @@ public class IAPlayer extends Player {
             return aux;
         }
 
+        /**
+         * indica si existe una ficha en la casilla indicada
+         * @param fila fila de la casilla
+         * @param columna columna de la casilla
+         * @return true si hay un aficha en la casilla
+         */
         private boolean existeFicha(int fila, int columna) {
             return this.boton_int[fila][columna] != Conecta.VACIO;
         }
 
+        /**
+         * devuelve el contenido de la casilla
+         * @param fila
+         * @param columna
+         * @return el contenido de la casilla
+         */
         private int obtenerCasilla(int fila, int columna) {
             return this.boton_int[fila][columna];
         }
