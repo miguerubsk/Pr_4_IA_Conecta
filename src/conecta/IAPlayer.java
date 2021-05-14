@@ -40,23 +40,27 @@ public class IAPlayer extends Player {
      * Número de columnas del tablero
      */
     private static final int COLUMNAS = 7;
+
     /**
      * Número de filas del tablero
      */
     private static final int FILAS = 6;
+
     /**
      * Número de fichas consecutivas necesarias para ganar
      */
     private static final int CONECTA = 4;
+
     /**
      * Profundidad máxima a la que se descenderá en el árbol
      */
-    private static final int PROFUNDIDAD_MAX = 10;
+    private static final int PROFUNDIDAD_MAX = 12;
 
     /**
      * Contiene el tablero tal cual era antes de la jugada del enemigo
      */
     private int[][] tableroAnterior;
+
     /**
      * Indica si es la primera vez que se juega
      */
@@ -121,10 +125,13 @@ public class IAPlayer extends Player {
 
     /**
      * algorimo minimax con poda alpha-beta
+     *
      * @param estadoActual nodo raíz del árbol de jugadas
      * @param profundidadActual profundidad por la que se va explorando
-     * @param alpha puntuación mínima asegurada para el jugador max (inicialmente −∞)
-     * @param beta puntuación máxima asegurada para el jugador min (inicialmente +∞)
+     * @param alpha puntuación mínima asegurada para el jugador max
+     * (inicialmente −∞)
+     * @param beta puntuación máxima asegurada para el jugador min (inicialmente
+     * +∞)
      * @param ultimaJugada última jugada que se realizó
      * @return valor heurístico
      */
@@ -160,8 +167,10 @@ public class IAPlayer extends Player {
 
     /**
      * calcula el valor heurístico o de utilidad del tablero que se le pasa
+     *
      * @param tablero tablero que se quiere calcular
-     * @param ultimaJugada fila y columna de la última jugada que se realizó sobre el tablero
+     * @param ultimaJugada fila y columna de la última jugada que se realizó
+     * sobre el tablero
      * @return el valor heurístico o de utilidad
      */
     private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
@@ -337,6 +346,7 @@ public class IAPlayer extends Player {
 
     /**
      * Imprime por pantalla un árbol por niveles
+     *
      * @param root nodo raíz del árbol que se quiere mostrar
      */
     public static void print(Estado root) {
@@ -490,6 +500,7 @@ public class IAPlayer extends Player {
 
         /**
          * comprueba si el tablero está lleno
+         *
          * @return true si está lleno
          */
         public boolean tableroLleno() {
@@ -538,6 +549,7 @@ public class IAPlayer extends Player {
 
         /**
          * indica si existe una ficha en la casilla indicada
+         *
          * @param fila fila de la casilla
          * @param columna columna de la casilla
          * @return true si hay un aficha en la casilla
@@ -548,6 +560,7 @@ public class IAPlayer extends Player {
 
         /**
          * devuelve el contenido de la casilla
+         *
          * @param fila
          * @param columna
          * @return el contenido de la casilla
