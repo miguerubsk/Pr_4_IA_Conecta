@@ -57,6 +57,7 @@ public class Conecta extends JFrame implements ActionListener {
     private final JMenuBar barra = new JMenuBar();
     private final JMenu archivo = new JMenu("Archivo");
     private final JMenu opciones = new JMenu("Opciones");
+    private final JMenuItem Reiniciar = new JMenuItem("Reset");
     private final JMenuItem salir = new JMenuItem("Salir");
     private final JRadioButton p1h = new JRadioButton("Humano", true);
     private final JRadioButton p2h = new JRadioButton("Humano", false);
@@ -96,6 +97,9 @@ public class Conecta extends JFrame implements ActionListener {
         // Eventos del menú Opciones
         if (ae.getSource() == p2h) {
             jugadorcpu = false; // Humano
+            reset();
+        }
+        if(ae.getSource() == Reiniciar){
             reset();
         }
         if (ae.getSource() == p2c) {
@@ -273,6 +277,7 @@ public class Conecta extends JFrame implements ActionListener {
         p2h.addActionListener(this);
         p2c.addActionListener(this);
         p2c2.addActionListener(this);
+        Reiniciar.addActionListener(this);
         ButtonGroup m2Jugador = new ButtonGroup();
         m2Jugador.add(p2h);
         m2Jugador.add(p2c);
@@ -283,6 +288,7 @@ public class Conecta extends JFrame implements ActionListener {
 
         barra.add(archivo);
         barra.add(opciones);
+        barra.add(Reiniciar);
         setJMenuBar(barra);
 
         //Panel Principal 
