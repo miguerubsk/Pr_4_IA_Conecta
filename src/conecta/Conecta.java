@@ -1,21 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2021 Miguel González García
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package conecta;
 
 /**
  *
- * @author José María Serrano
- * @author Cristóbal J. Carmona
+ * @author Miguel González García
  * @version 1.4 Departamento de Informática. Universidad de Jáen
- *
- * Inteligencia Artificial. 2º Curso. Grado en Ingeniería Informática
- *
- * Curso 2020-21: Se introducen obstáculos aleatorios
- *
- * Código original: * Lenin Palafox * http://www.leninpalafox.com
  */
 import javax.swing.*;
 import java.awt.*;
@@ -37,7 +41,7 @@ public class Conecta extends JFrame implements ActionListener {
     // Jugadores
     public static final int JUGADOR1 = 1;
     public static final int JUGADOR2 = -1;
-    public static final int JUGADOR0 = 2;
+    //public static final int JUGADOR0 = 2;
     public static final int VACIO = 0;
 
     // Parámetros
@@ -140,15 +144,15 @@ public class Conecta extends JFrame implements ActionListener {
                         finJuego(juego.checkWin(x, j, conecta));
 
                         // Añadiendo ruido, cada 5 jugadas
-                        if ((movimiento > 0) && (movimiento % 5 == 0)) {
-                            // Cara o cruz
-                            if (Math.random() < 0.5) {
-                                if (juego.setButton(player2.getRandomColumn(juego), Conecta.JUGADOR0) >= 0) {
-                                    //JOptionPane.showMessageDialog(this, "¡Oh, oh! ¡Ha aparecido una ficha obst\u00e1culo!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
-                                    movimiento++;
-                                }
-                            }
-                        }
+//                        if ((movimiento > 0) && (movimiento % 5 == 0)) {
+//                            // Cara o cruz
+//                            if (Math.random() < 0.5) {
+//                                if (juego.setButton(player2.getRandomColumn(juego), Conecta.JUGADOR0) >= 0) {
+//                                    //JOptionPane.showMessageDialog(this, "¡Oh, oh! ¡Ha aparecido una ficha obst\u00e1culo!", "Conecta4", JOptionPane.INFORMATION_MESSAGE);
+//                                    movimiento++;
+//                                }
+//                            }
+//                        }
                     } // En otro caso, la columna ya está completa
                 } // if
             } // for 2

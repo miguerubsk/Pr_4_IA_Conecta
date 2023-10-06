@@ -54,7 +54,7 @@ public class IAPlayer extends Player {
     /**
      * Profundidad máxima a la que se descenderá en el árbol
      */
-    private static final int PROFUNDIDAD_MAX = 12;
+    private static final int PROFUNDIDAD_MAX = 10;
 
     /**
      * Contiene el tablero tal cual era antes de la jugada del enemigo
@@ -136,8 +136,9 @@ public class IAPlayer extends Player {
      * @return valor heurístico
      */
     private int minimaxAlphaBeta(Estado estadoActual, int profundidadActual, int alpha, int beta, Pair<Integer, Integer> ultimaJugada) {
-        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno() || estadoActual.tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA) != 0) {
-            estadoActual.valor = ponderarTablero(estadoActual.tablero, ultimaJugada);
+        int winnerPlayer = estadoActual.tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA);
+        if (profundidadActual == PROFUNDIDAD_MAX || estadoActual.tablero.tableroLleno() || winnerPlayer != 0) {
+            estadoActual.valor = ponderarTablero(estadoActual.tablero, winnerPlayer);
             return estadoActual.valor;
         }
 
@@ -169,13 +170,12 @@ public class IAPlayer extends Player {
      * calcula el valor heurístico o de utilidad del tablero que se le pasa
      *
      * @param tablero tablero que se quiere calcular
-     * @param ultimaJugada fila y columna de la última jugada que se realizó
-     * sobre el tablero
+     * @param winnerPlayer el jugador que ha ganado, si es que lo hay
      * @return el valor heurístico o de utilidad
      */
-    private int ponderarTablero(Tablero tablero, Pair<Integer, Integer> ultimaJugada) {
+    private int ponderarTablero(Tablero tablero, int winnerPlayer) {
 
-        switch (tablero.checkWin(ultimaJugada.getKey(), ultimaJugada.getValue(), CONECTA)) {
+        switch (winnerPlayer) {
             case Conecta.JUGADOR2:
                 return Integer.MAX_VALUE - 1;
             case Conecta.JUGADOR1:
@@ -760,9 +760,9 @@ public class IAPlayer extends Player {
                     case Conecta.JUGADOR2:
                         this.boton_int[y][col] = Conecta.JUGADOR2;
                         break;
-                    case Conecta.JUGADOR0:
-                        this.boton_int[y][col] = Conecta.JUGADOR0;
-                        break;
+//                    case Conecta.JUGADOR0:
+//                        this.boton_int[y][col] = Conecta.JUGADOR0;
+//                        break;
                 } // switch
             } // if
 

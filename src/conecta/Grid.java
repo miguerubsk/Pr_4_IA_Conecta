@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2021 Miguel González García
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package conecta;
 
@@ -11,14 +22,8 @@ import javax.swing.JButton;
 
 /**
  *
- * @author José María Serrano
- * @author Cristóbal J. Carmona
+ * @author Miguel González García
  * @version 1.4 Departamento de Informática. Universidad de Jáen
- *
- * Inteligencia Artificial. 2º Curso. Grado en Ingeniería Informática
- *
- * Curso 2020-21: Se introducen obstáculos aleatorios
- * Clase Grid para representar un tablero de juego
  *
  */
 public class Grid {
@@ -312,10 +317,10 @@ public class Grid {
                     boton[y][col].setIcon(foto2); // Jugador 2
                     boton_int[y][col] = -1;
                     break;
-                case Conecta.JUGADOR0:
-                    boton[y][col].setIcon(foto0); // Pieza obstáculo
-                    boton_int[y][col] = 2;
-                    break;
+//                case Conecta.JUGADOR0:
+//                    boton[y][col].setIcon(foto0); // Pieza obstáculo
+//                    boton_int[y][col] = 2;
+//                    break;
             } // switch
         } // if
 
