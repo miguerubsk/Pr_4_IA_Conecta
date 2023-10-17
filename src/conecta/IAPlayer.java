@@ -22,16 +22,8 @@ import java.util.Queue;
 
 /**
  *
- * @author José María Serrano
- * @author Cristóbal J. Carmona
- * @version 1.4 Departamento de Informática. Universidad de Jáen
- *
- * Inteligencia Artificial. 2º Curso. Grado en Ingeniería Informática
- *
- * Curso 2020-21: Se introducen obstáculos aleatorios Clase IAPlayer para
- * representar al jugador CPU que usa la poda Alfa Beta
- *
- * Esta clase es la que tenemos que implementar y completar
+ * @author Miguel González García
+ * @version 1.4
  *
  */
 public class IAPlayer extends Player {
